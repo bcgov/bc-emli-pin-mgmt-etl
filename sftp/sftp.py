@@ -31,7 +31,7 @@ def get_files_to_download_from_sftp(sftp, date_limit, remote_path):
         trace_error = traceback.format_exc()
         print('SOMETHING IS WRONG DIDNT GET THE FILES\n' + trace_error)
 
-def download_files_from_sftp(sftp, files_list, remote_path, local_path = "/Users/anayanapalli/test/"):
+def download_files_from_sftp(sftp, files_list, remote_path, local_path):
     for file in files_list:
         sftp.get(remote_path+file, local_path+file)
         print(f"DOWNLOADED----------------{remote_path+file}")
