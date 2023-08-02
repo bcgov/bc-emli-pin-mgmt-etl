@@ -24,7 +24,7 @@ def get_files_to_download_from_sftp(sftp, date_limit, remote_path):
             last_modified = sftp.stat(remote_path + f).st_mtime
             last_modified_date = datetime.fromtimestamp(last_modified).date()   
             if last_modified_date > date_limit:  # check limit
-                if sftp.stat(remote_path + f).st_size > 500:  # check if file is empty (in this case larger than 1MB)
+                if sftp.stat(remote_path + f).st_size > 500:  # check if file is empty (in this case larger than 500KB)
                     files_to_download.append(f)
         return files_to_download
     except:
