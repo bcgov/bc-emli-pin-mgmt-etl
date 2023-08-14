@@ -11,7 +11,7 @@ def set_sftp_conn(host, port, username, password):
     print("connecting to SFTP...")
     transport.connect(username=username, password=password)
     sftp = paramiko.SFTPClient.from_transport(transport)
-    print("connection established.")
+    print("CONNECTION ESTABLISHED...")
     return sftp
 
 
