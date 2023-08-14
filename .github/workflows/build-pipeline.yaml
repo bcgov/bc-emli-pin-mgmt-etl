@@ -1,0 +1,26 @@
+name: Dev Env - Test + Build Pipeline
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Login Openshift
+        shell: bash
+        run: |
+          oc login --server=${{ secrets.OPENSHIFT_LOGIN_REGISTRY }} --token=${{ secrets.OPENSHIFT_SA_TOKEN_DEV }}
+
+      - name: Switch to correct project environment in Openshift
+        shell: bash
+        run: |
+          oc project ${{ secrets.OPENSHIFT_NAMESPACE_DEV }}
+
+      - name: Build image on OpenShift
+        shell: bash
+        run: |
+          oc start-build ${{ secrets.OPENSHIFT_BUILDCONFIG }}

@@ -1,0 +1,20 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: bc-emli-pin-mgmt-etl
+  labels:
+    app: bc-emli-pin-mgmt-etl
+spec:
+  source:
+    type: Git
+    git:
+      uri: https://github.com/bcgov/bc-emli-pin-mgmt-etl
+    contextDir:
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile # Look for Dockerfile in: gitUri/contextDir/dockerfilePath
+  output:
+    to:
+      kind: ImageStreamTag
+      name: python:latest
