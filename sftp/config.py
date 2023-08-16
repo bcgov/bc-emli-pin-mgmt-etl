@@ -4,4 +4,4 @@ username = "demo"
 password = "password"
 days_back = 20 * 365
 remote_path = "/pub/example/"
-local_path = "./"
+local_path = "./data/"

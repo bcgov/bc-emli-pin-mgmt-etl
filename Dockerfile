@@ -1,6 +1,7 @@
-FROM python:3.9 
-# Or any preferred Python version.
+FROM python:3.9
 ADD ./sftp /
+RUN mkdir data
+# RUN chmod g+w ./data
 RUN pip install paramiko
-CMD ["python", "./sftp.py"] 
-# Or enter the name of your unique directory and parameter set.
+# USER 1001
+CMD ["python", "./sftp.py"]
