@@ -17,4 +17,4 @@ spec:
   output:
     to:
       kind: ImageStreamTag
-      name: python:latest
+      name: bc-emli-pin-mgmt-etl:latest

@@ -1,5 +1,5 @@
 kind: ImageStream
 apiVersion: image.openshift.io/v1
 metadata:
-  name: python
+  name: bc-emli-pin-mgmt-etl
   namespace: c82b4c-dev
