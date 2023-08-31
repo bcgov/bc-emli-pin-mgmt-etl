@@ -1,7 +1,6 @@
 import paramiko
 from datetime import datetime, timedelta
 import traceback
-import config as cn
 
 
 def set_sftp_conn(host, port, username, password):
@@ -42,24 +41,16 @@ def download_files_from_sftp(sftp, files_list, remote_path, local_path):
         print(f"DOWNLOADED----------------{remote_path+file}")
 
 
-def main():
+def run(host, port, username, password, days_back, remote_path, local_path):
     # set date limit for files
-    days_back = cn.days_back
     date_limit = datetime.date(datetime.now()) - timedelta(days=days_back)
 
-    # set from & to paths for files to download
-    remote_path = cn.remote_path
-    local_path = cn.local_path
-
     # establish sftp connection
-    sftp_conn = set_sftp_conn(cn.host, cn.port, cn.username, cn.password)
+    sftp_conn = set_sftp_conn(host, port, username, password)
+
     files_to_download = get_files_to_download_from_sftp(
         sftp_conn, date_limit, remote_path
     )
 
     # download the files
     download_files_from_sftp(sftp_conn, files_to_download, remote_path, local_path)
-
-
-if __name__ == "__main__":
-    main()
