@@ -54,7 +54,3 @@ def run(host, port, username, password, days_back, remote_path, local_path):
 
     # download the files
     download_files_from_sftp(sftp_conn, files_to_download, remote_path, local_path)
-
-
-if __name__ == "__main__":
-    run()

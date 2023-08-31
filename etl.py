@@ -1,4 +1,5 @@
-from sftp import sftp
+from sftp import sftp_download
+import config as cn
 import argparse
 
 parser = argparse.ArgumentParser(
@@ -7,14 +8,28 @@ parser = argparse.ArgumentParser(
     epilog="Please check the repo: https://github.com/bcgov/bc-emli-pin-mgmt-etl",
 )
 
+# Host argument
+parser.add_argument("--host", type=str, help="Host address.")
+
+# Port argument
+parser.add_argument("--port", type=int, help="Port number.")
+
+# Username argument
+parser.add_argument("--username", type=str, help="Username of the SFTP login.")
+
+# Password argument
+parser.add_argument("--password", type=str, help="Password of the SFTP login.")
+
+
 args = parser.parse_args()
 
-sftp.main()
-
-# host = "test.rebex.net"
-# port = 22
-# username = "demo"
-# password = "password"
-# days_back = 20 * 365
-# remote_path = "/pub/example/"
-# local_path = "./data/"
+# Step 1: Download the SFTP files to the PVC
+sftp_download.run(
+    args.host,
+    args.port,
+    args.username,
+    args.password,
+    cn.days_back,
+    cn.remote_path,
+    cn.local_path,
+)
