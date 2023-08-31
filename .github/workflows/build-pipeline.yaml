@@ -11,8 +11,8 @@ jobs:
 
     steps:
 
-      - name: Python Black Lint
       - uses: actions/checkout@v3
+      
       - uses: psf/black@stable
 
       - name: Login Openshift
