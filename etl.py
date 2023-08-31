@@ -23,6 +23,8 @@ parser.add_argument("--password", type=str, help="Password of the SFTP login.")
 
 args = parser.parse_args()
 
+print(f"HOST: {args.host}, PORT: {args.port}")
+
 # Step 1: Download the SFTP files to the PVC
 sftp_download.run(
     args.host,
