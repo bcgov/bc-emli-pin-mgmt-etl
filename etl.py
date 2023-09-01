@@ -1,5 +1,4 @@
 from sftp import sftp_download
-import config as cn
 import argparse
 
 parser = argparse.ArgumentParser(
