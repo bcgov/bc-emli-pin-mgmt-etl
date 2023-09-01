@@ -1,5 +1,6 @@
 import paramiko
 
+
 def set_sftp_conn(host, port, username, password):
     """Set sftp connection to get the files, using config.py"""
     # Connect to sftp
