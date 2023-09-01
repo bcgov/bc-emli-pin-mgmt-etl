@@ -14,25 +14,13 @@ def set_sftp_conn(host, port, username, password):
     return sftp
 
 
-def get_files_to_download_from_sftp(sftp, date_limit, remote_path):
+def get_files_to_download_from_sftp(sftp, remote_path):
     """get the list of files to download from the SFTP server"""
     # get files in directory
-    all_files = sftp.listdir(remote_path)
-    files_to_download = []
-    # check for new files above date limit
-    try:
-        for f in all_files:
-            last_modified = sftp.stat(remote_path + f).st_mtime
-            last_modified_date = datetime.fromtimestamp(last_modified).date()
-            if last_modified_date > date_limit:  # check limit
-                if (
-                    sftp.stat(remote_path + f).st_size > 500
-                ):  # check if file is empty (in this case larger than 500KB)
-                    files_to_download.append(f)
-        return files_to_download
-    except:
-        trace_error = traceback.format_exc()
-        print("SOMETHING IS WRONG DIDNT GET THE FILES\n" + trace_error)
+    files_to_download = sftp.listdir(remote_path)
+    if len(files_to_download) <= 0:
+        print("NOW NEW FILES UPLOADED...")
+    return files_to_download
 
 
 def download_files_from_sftp(sftp, files_list, remote_path, local_path):
@@ -41,16 +29,12 @@ def download_files_from_sftp(sftp, files_list, remote_path, local_path):
         print(f"DOWNLOADED----------------{remote_path+file}")
 
 
-def run(host, port, username, password, days_back, remote_path, local_path):
-    # set date limit for files
-    date_limit = datetime.date(datetime.now()) - timedelta(days=days_back)
+def run(host, port, username, password, remote_path, local_path):
 
     # establish sftp connection
     sftp_conn = set_sftp_conn(host, port, username, password)
 
-    files_to_download = get_files_to_download_from_sftp(
-        sftp_conn, date_limit, remote_path
-    )
+    files_to_download = get_files_to_download_from_sftp(sftp_conn, remote_path)
 
     # download the files
     download_files_from_sftp(sftp_conn, files_to_download, remote_path, local_path)

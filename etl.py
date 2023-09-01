@@ -20,12 +20,19 @@ parser.add_argument("--username", type=str, help="Username of the SFTP login.")
 # Password argument
 parser.add_argument("--password", type=str, help="Password of the SFTP login.")
 
+# Password argument
+parser.add_argument(
+    "--remote_path",
+    type=str,
+    help="Remote path of the SFTP folder to copy the files from.",
+)
+
+# Password argument
+parser.add_argument(
+    "--local_path", type=str, help="Local folder path to download the files to."
+)
 
 args = parser.parse_args()
-
-print(
-    f"DAYS_BACK: {cn.days_back}, REMOTE_PATH: {cn.remote_path}, LOCAL_PATH: {cn.local_path}"
-)
 
 # Step 1: Download the SFTP files to the PVC
 sftp_download.run(
@@ -33,7 +40,6 @@ sftp_download.run(
     args.port,
     args.username,
     args.password,
-    cn.days_back,
-    cn.remote_path,
-    cn.local_path,
+    args.remote_path,
+    args.local_path,
 )
