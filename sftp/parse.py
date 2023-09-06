@@ -20,7 +20,7 @@ def parse(csv_files):
     merged_df_2 = pd.merge(dfs[2], dfs[3], on='TITLE_NMBR')
     merged_df = pd.merge(merged_df_1, merged_df_2, on='TITLE_NMBR')
 
-    # Remove unnecessary columns
+    # Remove unnecessary columns and spaces
     merged_df = merged_df.drop(columns=['NATURE_OF_XFER1', 'NATURE_OF_XFER2', 'TTL_ENTRD_DT', 'TTL_CNCL_DT', 'DCMNT_ACPTNC_DT', 'MRKT_VALUE_AMNT', 'REGISTRATION_DATE', 'CANCELLATION_DATE', 'REGDES', 'TX_ATHRTY_NM', 'LGDS', 'AIRSPACE_IND', 'STRATA_PLAN_NMBR', 'NMRTR_NMBR', 'DNMNTR_NMBR', 'TNNCY_TYP_IND', 'OCCPTN_DESC', 'TTL_RMRK_TEXT'])
     merged_df = merged_df.map(lambda x: x.strip() if isinstance(x, str) else x)
 
@@ -42,3 +42,4 @@ def parse(csv_files):
     final_df = final_df.loc[final_df.astype(str).drop_duplicates().index]
 
     print(final_df.query('`TITLE_NMBR` == "A13613" or  `TITLE_NMBR` == "AC206761" or `TITLE_NMBR` == "AD134401"'))
+    
