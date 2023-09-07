@@ -1,4 +1,5 @@
 from sftp import sftp_download
+from sftp import sftp_parse
 import argparse
 
 parser = argparse.ArgumentParser(
@@ -31,6 +32,14 @@ parser.add_argument(
     "--local_path", type=str, help="Local folder path to download the files to."
 )
 
+# Remote Output Path argument
+parser.add_argument(
+    "--remote_output_path",
+    type=str,
+    help="Remote folder path to download the parsed output files to.",
+)
+
+
 args = parser.parse_args()
 
 # Step 1: Download the SFTP files to the PVC
@@ -42,3 +51,6 @@ sftp_download.run(
     args.remote_path,
     args.local_path,
 )
+
+# Step 2: Process the downloaded SFTP files and write to output folder
+sftp_parse.parse_sftp_files(args.remote_path, args.remote_output_path)
