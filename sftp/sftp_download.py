@@ -28,7 +28,6 @@ def download_files_from_sftp(sftp, files_list, remote_path, local_path):
 
 
 def run(host, port, username, password, remote_path, local_path):
-
     # Establish sftp connection
     sftp_conn = set_sftp_conn(host, port, username, password)
 
