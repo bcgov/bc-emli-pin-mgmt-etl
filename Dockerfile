@@ -2,7 +2,7 @@ FROM python:3.9
 ADD . /
 RUN mkdir data
 RUN chmod g+w ./data
-RUN pip install paramiko
+RUN pip install -r requirements.txt
 USER 1001
 
 # Environment variables
