@@ -1,5 +1,5 @@
-from sftp import sftp_download
-from sftp import sftp_parse
+from utils import sftp_download
+from utils import sftp_parse
 import argparse
 
 parser = argparse.ArgumentParser(
