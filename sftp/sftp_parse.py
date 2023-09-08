@@ -1,6 +1,6 @@
 import pandas as pd
 import datetime
-import datetime
+import numpy as np
 
 
 def pid_parser(pids):
@@ -15,7 +15,6 @@ def pid_parser(pids):
 
 # Parses csv files from input_directory and outputs a single formatted csv file into the output_directory
 def parse_sftp_files(input_directory, output_directory):
-    # Check datatypes
     title_df = pd.read_csv(
         input_directory + "1_title.csv",
         usecols=[
@@ -25,13 +24,23 @@ def parse_sftp_files(input_directory, output_directory):
             "FRM_TTL_NMBR",
             "FRM_LT_DISTRICT_CD",
         ],
+        dtype={
+            "TITLE_NMBR": str,
+            "LTB_DISTRICT_CD": str,
+            "TTL_STTS_CD": str,
+            "FRM_TTL_NMBR": str,
+            "FRM_LT_DISTRICT_CD": str,
+        },
     )
     parcel_df = pd.read_csv(
-        input_directory + "2_parcel.csv", usecols=["PRMNNT_PRCL_ID"]
+        input_directory + "2_parcel.csv",
+        usecols=["PRMNNT_PRCL_ID"],
+        dtype={"PRMNNT_PRCL_ID": int},
     )
     title_parcel_df = pd.read_csv(
         input_directory + "3_titleparcel.csv",
         usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
+        dtype={"TITLE_NMBR": str, "LTB_DISTRICT_CD": str, "PRMNNT_PRCL_ID": int},
     )
     title_owner_df = pd.read_csv(
         input_directory + "4_titleowner.csv",
@@ -49,6 +58,20 @@ def parse_sftp_files(input_directory, output_directory):
             "ADDRS_CNTRY",
             "ADDRS_PSTL_CD",
         ],
+        dtype={
+            "TITLE_NMBR": str,
+            "LTB_DISTRICT_CD": str,
+            "CLIENT_GVN_NM": str,
+            "CLIENT_LST_NM_1": str,
+            "INCRPRTN_NMBR": str,
+            "ADDRS_DESC_1": str,
+            "ADDRS_DESC_2": str,
+            "ADDRS_CITY": str,
+            "ADDRS_PROV_CD": str,
+            "ADDRS_PROV_ST": str,
+            "ADDRS_CNTRY": str,
+            "ADDRS_PSTL_CD": str,
+        },
     )
 
     # Join dataframes
