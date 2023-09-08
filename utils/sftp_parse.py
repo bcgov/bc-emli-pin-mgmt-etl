@@ -128,8 +128,4 @@ def parse_sftp_files(input_directory, output_directory):
         output_directory + "processed_data_" + current_date_time + ".csv"
     )
 
-
-parse_sftp_files(
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-)
+    print(f"UPLOADED----------------{output_directory+'processed_data_'+current_date_time+'.csv'}")
