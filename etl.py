@@ -34,9 +34,9 @@ parser.add_argument(
 
 # Remote Output Path argument
 parser.add_argument(
-    "--remote_output_path",
+    "--processed_data_path",
     type=str,
-    help="Remote folder path to download the parsed output files to.",
+    help="Remote folder path to download the processed output data files to.",
 )
 
 
@@ -53,4 +53,4 @@ sftp_download.run(
 )
 
 # Step 2: Process the downloaded SFTP files and write to output folder
-sftp_parse.parse_sftp_files(args.remote_path, args.remote_output_path)
+sftp_parse.parse_sftp_files(args.local_path, args.processed_data_path)

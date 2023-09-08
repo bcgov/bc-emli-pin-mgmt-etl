@@ -1,88 +1,98 @@
 import pandas as pd
-import os
+import datetime
+import datetime
+
+
+def pid_parser(pids):
+    pids = (
+        str(sorted(list(set(pids))))
+        .replace("[", "")
+        .replace("]", "")
+        .replace(",", " |")
+    )
+    return pids
 
 
 # Parses csv files from input_directory and outputs a single formatted csv file into the output_directory
 def parse_sftp_files(input_directory, output_directory):
-    # Set directory to folder containing csv file
-    os.chdir(input_directory)
-
-    # Make an array of csv files
-    csv_files = [f for f in os.listdir() if f.endswith(".csv")]
-    csv_files = sorted(csv_files)
-
-    # Set each csv file to a dataframe
-    dfs = []
-    for csv in csv_files:
-        df = pd.read_csv(csv)
-        dfs.append(df)
-
-    # Name dfs appropriately
-    title_table = dfs[0]
-    parcel_table = dfs[1]
-    title_parcel_table = dfs[2]
-    title_owner_table = dfs[3]
-
-    # Join dataframes on title number
-    merged_df_1 = pd.merge(title_table, parcel_table, on="TITLE_NMBR")
-    merged_df_2 = pd.merge(title_parcel_table, title_owner_table, on="TITLE_NMBR")
-    merged_df = pd.merge(merged_df_1, merged_df_2, on="TITLE_NMBR")
-
-    # Remove unnecessary columns and spaces, make column names lowercase
-    # Check datatypes of columns
-    # Check for dropped records (Counts) - There is 78714 rows in merged (75681 in title owner table)
-    merged_df = merged_df.drop(
-        columns=[
-            "NATURE_OF_XFER1",
-            "NATURE_OF_XFER2",
-            "TTL_ENTRD_DT",
-            "TTL_CNCL_DT",
-            "DCMNT_ACPTNC_DT",
-            "MRKT_VALUE_AMNT",
-            "REGISTRATION_DATE",
-            "CANCELLATION_DATE",
-            "REGDES",
-            "TX_ATHRTY_NM",
-            "LGDS",
-            "AIRSPACE_IND",
-            "STRATA_PLAN_NMBR",
-            "NMRTR_NMBR",
-            "DNMNTR_NMBR",
-            "TNNCY_TYP_IND",
-            "OCCPTN_DESC",
-            "TTL_RMRK_TEXT",
-        ]
+    # Check datatypes
+    title_df = pd.read_csv(
+        input_directory + "1_title.csv",
+        usecols=[
+            "TITLE_NMBR",
+            "LTB_DISTRICT_CD",
+            "TTL_STTS_CD",
+            "FRM_TTL_NMBR",
+            "FRM_LT_DISTRICT_CD",
+        ],
     )
-    merged_df.columns = merged_df.columns.str.lower()
-    merged_df = merged_df.map(lambda x: x.strip() if isinstance(x, str) else x)
+    parcel_df = pd.read_csv(
+        input_directory + "2_parcel.csv", usecols=["PRMNNT_PRCL_ID"]
+    )
+    title_parcel_df = pd.read_csv(
+        input_directory + "3_titleparcel.csv",
+        usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
+    )
+    title_owner_df = pd.read_csv(
+        input_directory + "4_titleowner.csv",
+        usecols=[
+            "TITLE_NMBR",
+            "LTB_DISTRICT_CD",
+            "CLIENT_GVN_NM",
+            "CLIENT_LST_NM_1",
+            "INCRPRTN_NMBR",
+            "ADDRS_DESC_1",
+            "ADDRS_DESC_2",
+            "ADDRS_CITY",
+            "ADDRS_PROV_CD",
+            "ADDRS_PROV_ST",
+            "ADDRS_CNTRY",
+            "ADDRS_PSTL_CD",
+        ],
+    )
+
+    # Join dataframes
+    title_titleowner_df = pd.merge(
+        title_owner_df, title_df, on=["TITLE_NMBR", "LTB_DISTRICT_CD"]
+    )
+    titleparcel_parcel_df = pd.merge(title_parcel_df, parcel_df, on="PRMNNT_PRCL_ID")
+    active_pin_df = pd.merge(
+        title_titleowner_df, titleparcel_parcel_df, on=["TITLE_NMBR", "LTB_DISTRICT_CD"]
+    )
+
+    # Make column names lowercase
+    active_pin_df.columns = active_pin_df.columns.str.lower()
+    # Do this with converters when reading df
+    active_pin_df = (
+        active_pin_df.map(lambda x: x.strip() if isinstance(x, str) else x)
+        .replace("", None)
+        .replace(np.nan, None)
+    )
 
     # Group by title number to get a list of pids associated with each title
-    grouped_df = (
-        merged_df.groupby("title_nmbr")["prmnnt_prcl_id_x"]
+    titlenumber_pids_df = (
+        active_pin_df.groupby("title_nmbr")["prmnnt_prcl_id"]
         .apply(list)
         .reset_index(name="pids")
     )
 
     # For each title number in grouped_df, put list of pids in proper sorted string format
-    grouped_df["pids"] = grouped_df["pids"].tolist()
-    grouped_df["pids"] = grouped_df["pids"].apply(lambda x: str(sorted(list(set(x)))))
-    grouped_df["pids"] = grouped_df["pids"].apply(
-        lambda x: x.replace("[", "").replace("]", "").replace(",", " |")
-    )
+    titlenumber_pids_df["pids"] = titlenumber_pids_df["pids"].apply(pid_parser)
 
     # Merge dataframes to add in PIDs column and drop duplicate rows
-    final_df = pd.merge(merged_df, grouped_df, on="title_nmbr")
-    final_df = final_df.drop(
-        columns=[
-            "prmnnt_prcl_id_x",
-            "prmnnt_prcl_id_y",
-            "ltb_district_cd_x",
-            "ltb_district_cd_y",
-            "ttl_ownrshp_nmbr",
-            "prcl_stts_cd",
-        ]
+    active_pin_df = pd.merge(active_pin_df, titlenumber_pids_df, on="title_nmbr").drop(
+        columns=["prmnnt_prcl_id"]
     )
-    final_df = final_df.loc[final_df.astype(str).drop_duplicates().index]
+    active_pin_df = active_pin_df.loc[active_pin_df.astype(str).drop_duplicates().index]
 
     # Write to output file
-    final_df.to_csv(output_directory)
+    current_date_time = str(datetime.datetime.now())
+    active_pin_df.to_csv(
+        output_directory + "processed_data_" + current_date_time + ".csv"
+    )
+
+
+parse_sftp_files(
+    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
+    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
+)
