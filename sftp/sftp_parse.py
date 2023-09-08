@@ -15,63 +15,83 @@ def pid_parser(pids):
 
 # Parses csv files from input_directory and outputs a single formatted csv file into the output_directory
 def parse_sftp_files(input_directory, output_directory):
-    title_df = pd.read_csv(
-        input_directory + "1_title.csv",
-        usecols=[
-            "TITLE_NMBR",
-            "LTB_DISTRICT_CD",
-            "TTL_STTS_CD",
-            "FRM_TTL_NMBR",
-            "FRM_LT_DISTRICT_CD",
-        ],
-        dtype={
-            "TITLE_NMBR": str,
-            "LTB_DISTRICT_CD": str,
-            "TTL_STTS_CD": str,
-            "FRM_TTL_NMBR": str,
-            "FRM_LT_DISTRICT_CD": str,
-        },
+    title_df = (
+        pd.read_csv(
+            input_directory + "1_title.csv",
+            usecols=[
+                "TITLE_NMBR",
+                "LTB_DISTRICT_CD",
+                "TTL_STTS_CD",
+                "FRM_TTL_NMBR",
+                "FRM_LT_DISTRICT_CD",
+            ],
+            dtype={
+                "TITLE_NMBR": str,
+                "LTB_DISTRICT_CD": str,
+                "TTL_STTS_CD": str,
+                "FRM_TTL_NMBR": str,
+                "FRM_LT_DISTRICT_CD": str,
+            },
+        )
+        .map(lambda x: x.strip() if isinstance(x, str) else x)
+        .replace("", None)
+        .replace(np.nan, None)
     )
-    parcel_df = pd.read_csv(
-        input_directory + "2_parcel.csv",
-        usecols=["PRMNNT_PRCL_ID"],
-        dtype={"PRMNNT_PRCL_ID": int},
+    parcel_df = (
+        pd.read_csv(
+            input_directory + "2_parcel.csv",
+            usecols=["PRMNNT_PRCL_ID"],
+            dtype={"PRMNNT_PRCL_ID": int},
+        )
+        .map(lambda x: x.strip() if isinstance(x, str) else x)
+        .replace("", None)
+        .replace(np.nan, None)
     )
-    title_parcel_df = pd.read_csv(
-        input_directory + "3_titleparcel.csv",
-        usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
-        dtype={"TITLE_NMBR": str, "LTB_DISTRICT_CD": str, "PRMNNT_PRCL_ID": int},
+    title_parcel_df = (
+        pd.read_csv(
+            input_directory + "3_titleparcel.csv",
+            usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
+            dtype={"TITLE_NMBR": str, "LTB_DISTRICT_CD": str, "PRMNNT_PRCL_ID": int},
+        )
+        .map(lambda x: x.strip() if isinstance(x, str) else x)
+        .replace("", None)
+        .replace(np.nan, None)
     )
-    title_owner_df = pd.read_csv(
-        input_directory + "4_titleowner.csv",
-        usecols=[
-            "TITLE_NMBR",
-            "LTB_DISTRICT_CD",
-            "CLIENT_GVN_NM",
-            "CLIENT_LST_NM_1",
-            "INCRPRTN_NMBR",
-            "ADDRS_DESC_1",
-            "ADDRS_DESC_2",
-            "ADDRS_CITY",
-            "ADDRS_PROV_CD",
-            "ADDRS_PROV_ST",
-            "ADDRS_CNTRY",
-            "ADDRS_PSTL_CD",
-        ],
-        dtype={
-            "TITLE_NMBR": str,
-            "LTB_DISTRICT_CD": str,
-            "CLIENT_GVN_NM": str,
-            "CLIENT_LST_NM_1": str,
-            "INCRPRTN_NMBR": str,
-            "ADDRS_DESC_1": str,
-            "ADDRS_DESC_2": str,
-            "ADDRS_CITY": str,
-            "ADDRS_PROV_CD": str,
-            "ADDRS_PROV_ST": str,
-            "ADDRS_CNTRY": str,
-            "ADDRS_PSTL_CD": str,
-        },
+    title_owner_df = (
+        pd.read_csv(
+            input_directory + "4_titleowner.csv",
+            usecols=[
+                "TITLE_NMBR",
+                "LTB_DISTRICT_CD",
+                "CLIENT_GVN_NM",
+                "CLIENT_LST_NM_1",
+                "INCRPRTN_NMBR",
+                "ADDRS_DESC_1",
+                "ADDRS_DESC_2",
+                "ADDRS_CITY",
+                "ADDRS_PROV_CD",
+                "ADDRS_PROV_ST",
+                "ADDRS_CNTRY",
+                "ADDRS_PSTL_CD",
+            ],
+            dtype={
+                "TITLE_NMBR": str,
+                "LTB_DISTRICT_CD": str,
+                "CLIENT_GVN_NM": str,
+                "CLIENT_LST_NM_1": str,
+                "INCRPRTN_NMBR": str,
+                "ADDRS_DESC_1": str,
+                "ADDRS_DESC_2": str,
+                "ADDRS_CITY": str,
+                "ADDRS_PROV_CD": str,
+                "ADDRS_PROV_ST": str,
+                "ADDRS_CNTRY": str,
+                "ADDRS_PSTL_CD": str,
+            },
+        )
+        .map(lambda x: x.strip() if isinstance(x, str) else x)
+        .replace("", None)
+        .replace(np.nan, None)
     )
 
     # Join dataframes
@@ -85,12 +105,6 @@ def parse_sftp_files(input_directory, output_directory):
 
     # Make column names lowercase
     active_pin_df.columns = active_pin_df.columns.str.lower()
-    # Do this with converters when reading df
-    active_pin_df = (
-        active_pin_df.map(lambda x: x.strip() if isinstance(x, str) else x)
-        .replace("", None)
-        .replace(np.nan, None)
-    )
 
     # Group by title number to get a list of pids associated with each title
     titlenumber_pids_df = (
