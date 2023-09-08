@@ -128,4 +128,6 @@ def parse_sftp_files(input_directory, output_directory):
         output_directory + "processed_data_" + current_date_time + ".csv"
     )
 
-    print(f"UPLOADED----------------{output_directory+'processed_data_'+current_date_time+'.csv'}")
+    print(
+        f"UPLOADED----------------{output_directory+'processed_data_'+current_date_time+'.csv'}"
+    )
