@@ -1,5 +1,5 @@
 from utils import sftp_download
-from utils import sftp_parse
+from utils import ltsa_parse
 import argparse
 
 parser = argparse.ArgumentParser(
@@ -53,4 +53,4 @@ sftp_download.run(
 )
 
 # Step 2: Process the downloaded SFTP files and write to output folder
-sftp_parse.parse_sftp_files(args.local_path, args.processed_data_path)
+ltsa_parse.parse_sftp_files(args.local_path, args.processed_data_path)
