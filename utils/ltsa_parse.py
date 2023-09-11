@@ -102,7 +102,6 @@ def parse_sftp_files(input_directory, output_directory):
     )
     print(f"READ FILE----------------4_titleowner.csv")
 
-    # LOG NUMBER OF ROWS BEFORE AND AFTER JOINS
     # Join dataframes
     print(f"NUMBER OF ROWS IN title_owner_df: {len(title_owner_df)}")
     print(f"NUMBER OF ROWS IN title_df: {len(title_df)}")
@@ -186,9 +185,3 @@ def parse_sftp_files(input_directory, output_directory):
     print(
         f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'processed_data.csv'}"
     )
-
-
-parse_sftp_files(
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-)
