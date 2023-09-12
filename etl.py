@@ -53,4 +53,4 @@ sftp_download.run(
 )
 
 # Step 2: Process the downloaded SFTP files and write to output folder
-ltsa_parse.parse_sftp_files(args.local_path, args.processed_data_path)
+ltsa_parse.parse_ltsa_files(args.local_path, args.processed_data_path)

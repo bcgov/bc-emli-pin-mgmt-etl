@@ -14,7 +14,7 @@ def pid_parser(pids):
 
 
 # Parses csv files from input_directory and outputs a single formatted csv file into the output_directory
-def parse_sftp_files(input_directory, output_directory):
+def parse_ltsa_files(input_directory, output_directory):
     title_df = (
         pd.read_csv(
             input_directory + "1_title.csv",
@@ -130,6 +130,10 @@ def parse_sftp_files(input_directory, output_directory):
     print(f"NUMBER OF ROWS IN MERGED DATAFRAME active_pin_df: {len(active_pin_df)}")
 
     # Group by title number to get a list of pids associated with each title
+
+    # Recreate column if parcel is cancelled
+    # Update PIDs array with parcel status
+
     titlenumber_pids_df = (
         active_pin_df.groupby("TITLE_NMBR")["PRMNNT_PRCL_ID"]
         .apply(list)
