@@ -1,4 +1,4 @@
-from utils import sftp_downloader, postgres_writer, sftp_parser
+from utils import ltsa_parser, sftp_downloader, postgres_writer
 import argparse
 
 parser = argparse.ArgumentParser(
@@ -7,16 +7,20 @@ parser = argparse.ArgumentParser(
     epilog="Please check the repo: https://github.com/bcgov/bc-emli-pin-mgmt-etl",
 )
 
-# Host argument
-parser.add_argument("--sftp_host", type=str, help="Host address.")
+# sftp_host argument
+parser.add_argument(
+    "--sftp_host", type=str, help="Host address of the LTSA SFTP server."
+)
 
-# Port argument
-parser.add_argument("--sftp_port", type=int, help="Port number.")
+# sftp_port argument
+parser.add_argument(
+    "--sftp_port", type=int, default=22, help="Port number of the LTSA sftp server."
+)
 
-# Username argument
+# sftp_username argument
 parser.add_argument("--sftp_username", type=str, help="Username of the SFTP login.")
 
-# Password argument
+# sftp_password argument
 parser.add_argument("--sftp_password", type=str, help="Password of the SFTP login.")
 
 # Remote path argument
@@ -65,16 +69,18 @@ args = parser.parse_args()
 
 # Step 1: Download the SFTP files to the PVC
 sftp_downloader.run(
-    args.sftp_host,
-    args.sftp_port,
-    args.sftp_username,
-    args.sftp_password,
-    args.sftp_remote_path,
-    args.sftp_local_path,
+    host=args.sftp_host,
+    port=args.sftp_port,
+    username=args.sftp_username,
+    password=args.sftp_password,
+    remote_path=args.sftp_remote_path,
+    local_path=args.sftp_local_path,
 )
 
 # Step 2: Process the downloaded SFTP files and write to output folder
-sftp_parser.parse_sftp_files(args.local_path, args.processed_data_path)
+ltsa_parser.parse_sftp_files(
+    input_directory=args.local_path, output_directory=args.processed_data_path
+)
 
 
 # Step 3: Write the above processed data to the PostgreSQL database
