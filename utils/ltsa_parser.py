@@ -1,6 +1,5 @@
 import pandas as pd
 import datetime
-import numpy as np
 
 
 def pid_parser(pids):
