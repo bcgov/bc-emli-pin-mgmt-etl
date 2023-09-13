@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 import datetime
 import numpy as np
@@ -184,8 +185,52 @@ def parse_ltsa_files(input_directory, output_directory):
     # active_pin_df.to_csv(
     #     output_directory + "processed_data_" + current_date_time + ".csv"
     # )
-    active_pin_df.to_csv(output_directory + "processed_data.csv")
+    active_pin_df.to_csv(output_directory + "processed_data.csv", index=False)
 
     print(
         f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'processed_data.csv'}"
     )
+
+    clean_active_pin_df(active_pin_df, output_directory)
+
+
+def clean_active_pin_df(active_pin_df, output_directory):
+    with open("data_cleaning.json", "r") as rule_file:
+        data_cleaning = json.load(rule_file)
+
+    # Apply cleaning rules to each column
+    for column, rule in data_cleaning["column_rules"].items():
+        # Replace Values
+        if "replace_map" in rule.keys():
+            active_pin_df[column] = active_pin_df[column].replace(rule["replace_map"])
+
+        # Remove Characters
+        if "remove_map" in rule.keys():
+            for replacement in rule["remove_map"]:
+                active_pin_df[column] = active_pin_df[column].str.replace(
+                    replacement, rule["remove_map"][replacement]
+                )
+
+        # Trim after comma
+        if "trim_map" in rule.keys():
+            active_pin_df[column] = active_pin_df[column].apply(
+                lambda x: x.split(",")[0] if isinstance(x, str) else x
+            )
+
+        # To lowercase
+        if "to_lowercase" in rule.keys():
+            active_pin_df[column] = active_pin_df[column].apply(
+                lambda x: x.lower() if isinstance(x, str) else x
+            )
+
+    active_pin_df.to_csv(output_directory + "cleaned_data.csv", index=False)
+
+    print(
+        f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'cleaned_data.csv'}"
+    )
+
+
+parse_ltsa_files(
+    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
+    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
+)
