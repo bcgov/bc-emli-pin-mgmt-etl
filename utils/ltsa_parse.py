@@ -183,7 +183,7 @@ def parse_ltsa_files(input_directory, output_directory):
     # Write to output file
     # current_date_time = str(datetime.datetime.now())
     # active_pin_df.to_csv(
-    #     output_directory + "processed_data_" + current_date_time + ".csv"
+    #     output_directory + "processed_data_" + current_date_time + ".csv", index=False
     # )
     active_pin_df.to_csv(output_directory + "processed_data.csv", index=False)
 
@@ -195,7 +195,7 @@ def parse_ltsa_files(input_directory, output_directory):
 
 
 def clean_active_pin_df(active_pin_df, output_directory):
-    with open("data_cleaning.json", "r") as rule_file:
+    with open("utils/data_cleaning.json", "r") as rule_file:
         data_cleaning = json.load(rule_file)
 
     # Apply cleaning rules to each column
@@ -228,9 +228,3 @@ def clean_active_pin_df(active_pin_df, output_directory):
     print(
         f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'cleaned_data.csv'}"
     )
-
-
-parse_ltsa_files(
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-)
