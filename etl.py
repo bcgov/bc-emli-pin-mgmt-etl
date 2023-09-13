@@ -62,7 +62,7 @@ parser.add_argument("--db_name", type=str, help="Name of the DB in the Postgres 
 
 # db_password argument
 parser.add_argument(
-    "--db_write_batch_size", type=int, default=1000, help="Password of the SFTP login."
+    "--db_write_batch_size", type=int, default=1000, help="Number of records to be written to the db in one batch."
 )
 
 args = parser.parse_args()
