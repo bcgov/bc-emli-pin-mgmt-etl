@@ -43,8 +43,8 @@ def parse_ltsa_files(input_directory, output_directory):
     parcel_df = (
         pd.read_csv(
             input_directory + "2_parcel.csv",
-            usecols=["PRMNNT_PRCL_ID"],
-            dtype={"PRMNNT_PRCL_ID": int},
+            usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
+            dtype={"PRMNNT_PRCL_ID": int, "PRCL_STTS_CD": str},
         )
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
@@ -130,13 +130,11 @@ def parse_ltsa_files(input_directory, output_directory):
     )
     print(f"NUMBER OF ROWS IN MERGED DATAFRAME active_pin_df: {len(active_pin_df)}")
 
-    # Group by title number to get a list of pids associated with each title
-
-    # Recreate column if parcel is cancelled
-    # Update PIDs array with parcel status
+    # Group by title number to get a list of active pids associated with each title
+    active_parcel_df = active_pin_df.loc[active_pin_df["PRCL_STTS_CD"] != "I"]
 
     titlenumber_pids_df = (
-        active_pin_df.groupby("TITLE_NMBR")["PRMNNT_PRCL_ID"]
+        active_parcel_df.groupby("TITLE_NMBR")["PRMNNT_PRCL_ID"]
         .apply(list)
         .reset_index(name="pids")
     )
@@ -185,30 +183,37 @@ def parse_ltsa_files(input_directory, output_directory):
     # active_pin_df.to_csv(
     #     output_directory + "processed_data_" + current_date_time + ".csv", index=False
     # )
-    active_pin_df.to_csv(output_directory + "processed_data.csv", index=False)
+    active_pin_df.to_csv(output_directory + "active_pin_intact.csv", index=False)
 
     print(
-        f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'processed_data.csv'}"
+        f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'active_pin.csv'}"
     )
 
     clean_active_pin_df(active_pin_df, output_directory)
 
 
 def clean_active_pin_df(active_pin_df, output_directory):
-    with open("utils/data_cleaning.json", "r") as rule_file:
+    # Do cleaning before dropping columns
+    # for occupation rule: from column, to column, datatype
+    # Change to github directory
+
+    with open("cleaning_rules.json", "r") as rule_file:
         data_cleaning = json.load(rule_file)
 
     # Apply cleaning rules to each column
     for column, rule in data_cleaning["column_rules"].items():
-        # Replace Values
-        if "replace_map" in rule.keys():
-            active_pin_df[column] = active_pin_df[column].replace(rule["replace_map"])
+        # Replace Exact Values - Looks for exact string match in column and replaces it with value
+        if "replace_exact_values" in rule.keys():
+            for replacement in rule["replace_exact_values"]:
+                active_pin_df[column] = active_pin_df[column].replace(
+                    rule["replace_exact_values"][replacement], replacement
+                )
 
-        # Remove Characters
-        if "remove_map" in rule.keys():
-            for replacement in rule["remove_map"]:
+        # Remove Characters - Looks for strings containing character in column and removes character
+        if "remove_characters" in rule.keys():
+            for replacement in rule["remove_characters"]:
                 active_pin_df[column] = active_pin_df[column].str.replace(
-                    replacement, rule["remove_map"][replacement]
+                    replacement, ""
                 )
 
         # Trim after comma
@@ -220,11 +225,17 @@ def clean_active_pin_df(active_pin_df, output_directory):
         # To lowercase
         if "to_lowercase" in rule.keys():
             active_pin_df[column] = active_pin_df[column].apply(
-                lambda x: x.lower() if isinstance(x, str) else x
+                lambda x: x.upper() if isinstance(x, str) else x
             )
 
-    active_pin_df.to_csv(output_directory + "cleaned_data.csv", index=False)
+    active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
 
     print(
-        f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'cleaned_data.csv'}"
+        f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'active_pin.csv'}"
     )
+
+
+parse_ltsa_files(
+    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
+    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
+)
