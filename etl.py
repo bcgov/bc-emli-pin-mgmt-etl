@@ -79,7 +79,7 @@ sftp_downloader.run(
 
 # Step 2: Process the downloaded SFTP files and write to output folder
 ltsa_parser.parse_sftp_files(
-    input_directory=args.local_path, output_directory=args.processed_data_path
+    input_directory=args.sftp_local_path, output_directory=args.processed_data_path
 )
 
 
