@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 import numpy as np
 
+
 def pid_parser(pids):
     pids = (
         str(sorted(list(set(pids))))
@@ -225,13 +226,18 @@ def clean_active_pin_df(active_pin_df, output_directory):
         if "to_uppercase" in rule.keys():
             active_pin_df[column] = active_pin_df[column].apply(
                 lambda x: x.upper() if isinstance(x, str) else x
-        )
+            )
 
     active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
 
     print(
         f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'active_pin.csv'}"
     )
+
+
+def run(input_directory, output_directory):
+    # Parse the files
+    parse_ltsa_files(input_directory, output_directory)
 
 
 parse_ltsa_files(
