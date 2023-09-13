@@ -1,4 +1,4 @@
-from sftp import sftp_download
+from sftp import sftp_downloader
 import argparse
 
 parser = argparse.ArgumentParser(
@@ -19,14 +19,14 @@ parser.add_argument("--username", type=str, help="Username of the SFTP login.")
 # Password argument
 parser.add_argument("--password", type=str, help="Password of the SFTP login.")
 
-# Password argument
+# Remote path argument
 parser.add_argument(
     "--remote_path",
     type=str,
     help="Remote path of the SFTP folder to copy the files from.",
 )
 
-# Password argument
+# Local path argument
 parser.add_argument(
     "--local_path", type=str, help="Local folder path to download the files to."
 )
@@ -34,7 +34,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 # Step 1: Download the SFTP files to the PVC
-sftp_download.run(
+sftp_downloader.run(
     args.host,
     args.port,
     args.username,
@@ -42,3 +42,5 @@ sftp_download.run(
     args.remote_path,
     args.local_path,
 )
+
+# Step 3: Upload the processed files to the database
