@@ -73,6 +73,7 @@ def parse_ltsa_files(input_directory, output_directory):
                 "CLIENT_GVN_NM",
                 "CLIENT_LST_NM_1",
                 "CLIENT_LST_NM_2",
+                "OCCPTN_DESC",
                 "INCRPRTN_NMBR",
                 "ADDRS_DESC_1",
                 "ADDRS_DESC_2",
@@ -166,6 +167,7 @@ def parse_ltsa_files(input_directory, output_directory):
             "CLIENT_GVN_NM": "given_name",
             "CLIENT_LST_NM_1": "last_name_1",
             "CLIENT_LST_NM_2": "last_name_2",
+            "OCCPTN_DESC": "occupation",
             "INCRPRTN_NMBR": "incorporation_number",
             "ADDRS_DESC_1": "address_line_1",
             "ADDRS_DESC_2": "address_line_2",
@@ -178,15 +180,21 @@ def parse_ltsa_files(input_directory, output_directory):
     )
     print(f"DATAFRAME COLUMNS RENAMED----------------active_pin_df")
 
+    clean_active_pin_df(active_pin_df, output_directory)
+
+    active_pin_df = pd.merge(active_pin_df, titlenumber_pids_df, on="TITLE_NMBR").drop(
+        columns=["occupation"]
+    )
+
     # Write to output file
     # current_date_time = str(datetime.datetime.now())
     # active_pin_df.to_csv(
     #     output_directory + "processed_data_" + current_date_time + ".csv", index=False
     # )
-    active_pin_df.to_csv(output_directory + "active_pin_intact.csv", index=False)
+    active_pin_df.to_csv(output_directory + "active_pin_uncleaned.csv", index=False)
 
     print(
-        f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'active_pin.csv'}"
+        f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'active_pin_uncleaned.csv'}"
     )
 
     clean_active_pin_df(active_pin_df, output_directory)
@@ -222,7 +230,7 @@ def clean_active_pin_df(active_pin_df, output_directory):
                 lambda x: x.split(",")[0] if isinstance(x, str) else x
             )
 
-        # To lowercase
+        # To uppercase
         if "to_uppercase" in rule.keys():
             active_pin_df[column] = active_pin_df[column].apply(
                 lambda x: x.upper() if isinstance(x, str) else x
@@ -238,9 +246,3 @@ def clean_active_pin_df(active_pin_df, output_directory):
 def run(input_directory, output_directory):
     # Parse the files
     parse_ltsa_files(input_directory, output_directory)
-
-
-parse_ltsa_files(
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-)
