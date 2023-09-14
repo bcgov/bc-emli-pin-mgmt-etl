@@ -2,8 +2,6 @@ import json
 import pandas as pd
 import datetime
 import numpy as np
-
-
 def pid_parser(pids):
     pids = (
         str(sorted(list(set(pids))))
@@ -217,7 +215,7 @@ def clean_active_pin_df(active_pin_df, output_directory):
                 )
 
         # Trim after comma
-        if "trim_map" in rule.keys():
+        if "trim_after_comma" in rule.keys():
             active_pin_df[column] = active_pin_df[column].apply(
                 lambda x: x.split(",")[0] if isinstance(x, str) else x
             )
