@@ -154,6 +154,11 @@
         "ONTARIO": ["ON", "ONTAIRO"],
         "OREGON": ["OREGAN"],
         "UNITED STATES OF AMERICA": ["U.S.A", "U.S.A.", "USA", "US"]
+      },
+      "switch_column_value": {
+        "from_column": "province_long",
+        "to_column": "province_abbreviation",
+        "datatype": "str"
       }
     },
     "country": {
