@@ -235,18 +235,20 @@ def clean_active_pin_df(active_pin_df, output_directory):
             active_pin_df[column] = active_pin_df[column].apply(
                 lambda x: x.upper() if isinstance(x, str) else x
             )
-        
+
         # Switch value from one column, from_column, to another, to_column
-        if 'switch_column_value' in rule.keys():
-            from_column = rule['switch_column_value']['from_column']
-            to_column = rule['switch_column_value']['to_column']
-            datatype = rule['switch_column_value']['datatype']
-            
+        if "switch_column_value" in rule.keys():
+            from_column = rule["switch_column_value"]["from_column"]
+            to_column = rule["switch_column_value"]["to_column"]
+            datatype = rule["switch_column_value"]["datatype"]
+
             for value in active_pin_df[from_column]:
                 if datatype == "int" and value and value.isdigit():
-                    active_pin_df[to_column] = np.where((active_pin_df[from_column] == value), active_pin_df[from_column], active_pin_df[to_column])
-
-            
+                    active_pin_df[to_column] = np.where(
+                        (active_pin_df[from_column] == value),
+                        active_pin_df[from_column],
+                        active_pin_df[to_column],
+                    )
 
     active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
 
