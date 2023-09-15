@@ -1,6 +1,5 @@
 import json
 import pandas as pd
-import datetime
 import numpy as np
 import requests
 
@@ -261,14 +260,14 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
                         active_pin_df[to_column],
                     )
 
-        if "province_map" in rule["switch_column_value"]:
-            province_map = rule["switch_column_value"]["province_map"]
-            for replacement in province_map:
+        if "region_map" in rule["switch_column_value"]:
+            region_map = rule["switch_column_value"]["region_map"]
+            for replacement in region_map:
                 active_pin_df[column] = active_pin_df[column].replace(
-                    province_map[replacement], replacement
+                    region_map[replacement], replacement
                 )
 
-            for value in province_map.keys():
+            for value in region_map.keys():
                 active_pin_df[to_column] = np.where(
                     (active_pin_df[from_column] == value),
                     active_pin_df[from_column],
@@ -291,3 +290,9 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
 def run(input_directory, output_directory, data_rules_url):
     # Parse the files
     parse_ltsa_files(input_directory, output_directory, data_rules_url)
+
+run(
+    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
+    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
+    "https://raw.githubusercontent.com/bcgov/bc-emli-pin-mgmt-etl/main/data_rules.json",
+)

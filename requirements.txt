@@ -2,3 +2,4 @@ paramiko
 pandas
 psycopg2
 sqlalchemy
+requests
