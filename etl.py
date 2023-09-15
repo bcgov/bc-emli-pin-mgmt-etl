@@ -62,7 +62,10 @@ parser.add_argument("--db_name", type=str, help="Name of the DB in the Postgres 
 
 # db_password argument
 parser.add_argument(
-    "--db_write_batch_size", type=int, default=1000, help="Number of records to be written to the db in one batch."
+    "--db_write_batch_size",
+    type=int,
+    default=1000,
+    help="Number of records to be written to the db in one batch.",
 )
 
 args = parser.parse_args()
@@ -78,10 +81,9 @@ sftp_downloader.run(
 )
 
 # Step 2: Process the downloaded SFTP files and write to output folder
-ltsa_parser.parse_sftp_files(
+ltsa_parser.run(
     input_directory=args.local_path, output_directory=args.processed_data_path
 )
-
 
 # Step 3: Write the above processed data to the PostgreSQL database
 postgres_writer.run(

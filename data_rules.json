@@ -1,0 +1,178 @@
+{
+  "rule_descriptions": {
+    "to_uppercase": "Converts all text in the column to uppercase",
+    "switch_column_value": "If column value is the provided datatype, then it is moved from the from_column to the to_column",
+    "remove_characters": "Looks for column values containing listed characters and removes them, replacing them with an empty string",
+    "replace_exact_values": "Looks for exact matches to listed values, and replaces with provided key",
+    "trim_after_comma": "Trims all text in a column after (and including) a comma"
+  },
+  "column_rules": {
+    "given_name": {
+      "to_uppercase": "to_uppercase"
+    },
+    "last_name_1": {
+      "to_uppercase": "to_uppercase"
+    },
+    "last_name_2": {
+      "to_uppercase": "to_uppercase"
+    },
+    "occupation": {
+      "switch_column_value": {
+        "from_column": "occupation",
+        "to_column": "incorporation_number",
+        "datatype": "int"
+      }
+    },
+    "address_line_1": {
+      "to_uppercase": "to_uppercase",
+      "remove_characters": [".", ",", "-", "/", "#"]
+    },
+    "address_line_2": {
+      "to_uppercase": "to_uppercase",
+      "remove_characters": [".", ",", "-", "/", "#"]
+    },
+    "city": {
+      "to_uppercase": "to_uppercase",
+      "replace_exact_values": {
+        "ABBOTSFORD": [
+          "ABBOPSFORD",
+          "ABOSTFORD",
+          "ABBOTOSFORD",
+          "ABBOTSFORED",
+          "ABOTSFORD",
+          "ABBOTFORD",
+          "ABBOSTFORD"
+        ],
+        "ANAHEIM LAKE": ["ANAHIM LAKE"],
+        "BELCARRA": ["BELCARA"],
+        "BURNABY": [
+          "BURANBY",
+          "BURBABY",
+          "BURNABY 2",
+          "BURNABY 23",
+          "BURNABY 3",
+          "BURNBAY",
+          "BYURNABY",
+          "BYURNABY"
+        ],
+        "CALGARY": ["CALARY"],
+        "CHILLIWACK": ["CHILLIWCK", "CHILLWACK"],
+        "COQUITLAM": [
+          "COQITLAM",
+          "COQUILTAM",
+          "COQUITALAM",
+          "COQUITALM",
+          "COQUTILAM",
+          "COQUTLAM",
+          "CQOUITLAM",
+          "CQUITLAM"
+        ],
+        "EDMONTON": ["EDMONTON NW"],
+        "FORT ST JOHN": ["FORT STJOHN"],
+        "FORT ST JAMES": ["FORT STJAMES"],
+        "FURRY CREEK": ["FURY CREEK"],
+        "GRAND PRAIRIE": ["GRAND PRAIRE"],
+        "HALFMOON BAY": [
+          "HALFMOOD BAY",
+          "HALFMOOM BAY",
+          "HALFMOON",
+          "HALF MOON BAY"
+        ],
+        "HINTON": ["HILTON"],
+        "HUDSONS HOPE": ["HUDSON HOPE"],
+        "HUNTINGDON": ["HUNTINGTON"],
+        "LANGLEY": ["LANGELY", "LANLGEY"],
+        "MAPLE RIDGE": ["MAPLE RIDCGE", "MARPLE RIDGE"],
+        "MISSION": ["MISSION CITY", "MISISON"],
+        "NANAIMO": ["NANIAMO"],
+        "NEW WESTMINSTER": [
+          "NEW WEASTMINSTER",
+          "NEW WESMINSTER",
+          "NEW WESMTMINSTER",
+          "NEW WESTMINISTER",
+          "NEW WESTMINSTER DISTRICT",
+          "NEW WESTMINSTSER",
+          "NEW WESYMINSTER",
+          "NEW WETMINSTER"
+        ],
+        "NORTH VANCOUVER": [
+          "NORH VANCOUVER",
+          "NORTH  VANCOUVER",
+          "NORTH VANCOVER",
+          "NORTH VANCOVUER",
+          "NORTH VANOCUVER",
+          "NORTH VANOUVER",
+          "NOTH VANCOUVER"
+        ],
+        "PITT MEADOWS": ["PIT MEADOWS"],
+        "PORT COQUITLAM": [
+          "PORT COWUITLAM",
+          "PORT COQUITLAM3",
+          "PORT COQUILTAM",
+          "PORT COQITLAM"
+        ],
+        "PORT MOODY": ["PORT MODDY"],
+        "PRINCE GEORGE": ["PRINCE GEROGE"],
+        "RICHMOND": ["CITY OF RICHMOND", "RICHMONND"],
+        "SQUAMISH": ["SQUAMICH"],
+        "VANCOUVER": [
+          "VAANCOUVER",
+          "VANC0UVER",
+          "VANCOUER",
+          "VANCOUEVR",
+          "VANCOUVAER",
+          "VANCOUVE",
+          "VANCOUVER V6G 3H8",
+          "VANCOUVER 1",
+          "VANCOUVER3",
+          "VANCOVER",
+          "VANCOVUER",
+          "VANCUVER",
+          "VANOCOUVER",
+          "VSNCOUVER",
+          "VNACOUVER"
+        ],
+
+        "VANDERHOOF": ["VANDERHOFF"],
+        "WEST VANCOUVER": ["WEST VANCOVUER"],
+        "WILLIAMS LAKE": ["WILLIAM LAKE"]
+      },
+      "remove_characters": [".", ",", "-", "/", "#"],
+      "trim_after_comma": "trim_after_comma"
+    },
+    "province_abbreviation": {
+      "to_uppercase": "to_uppercase",
+      "replace_exact_values": {
+        "BC": ["B.", "BR"]
+      }
+    },
+    "province_long": {
+      "to_uppercase": "to_uppercase",
+      "replace_exact_values": {
+        "BRITISH COLUMBIA": ["BC", "B.C.", "RITISH COLUMBIA"],
+        "CALIFORNIA": ["CA", "CA 93065", "CALIFONIA"],
+        "ONTARIO": ["ON", "ONTAIRO"],
+        "OREGON": ["OREGAN"],
+        "UNITED STATES OF AMERICA": ["U.S.A", "U.S.A.", "USA", "US"]
+      },
+      "switch_column_value": {
+        "from_column": "province_long",
+        "to_column": "province_abbreviation",
+        "datatype": "str"
+      }
+    },
+    "country": {
+      "to_uppercase": "to_uppercase",
+      "replace_exact_values": {
+        "HONG KONG": ["HONGKONG", "HONG KONK"],
+        "CHINA": ["PEOPLES REPUBLIC OF CHINA", "REPUBLIC OF CHINA", "R.O.C."],
+        "SINGAPORE": ["SINGPORE"],
+        "UNITED STATES OF AMERICA": ["U.S.A", "U.S.A.", "USA", "US"],
+        "UNITED KINGDON": ["UK", "U.K.", "U.K"]
+      }
+    },
+    "postal_code": {
+      "to_uppercase": "to_uppercase"
+    }
+  }
+}
