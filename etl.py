@@ -68,6 +68,13 @@ parser.add_argument(
     help="Number of records to be written to the db in one batch.",
 )
 
+# data_rules_url argument
+parser.add_argument(
+    "--data_rules_url",
+    type=str,
+    help="URL to the data_rules.json file in a public GitHub repository.",
+)
+
 args = parser.parse_args()
 
 # Step 1: Download the SFTP files to the PVC
