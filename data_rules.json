@@ -158,7 +158,19 @@
       "switch_column_value": {
         "from_column": "province_long",
         "to_column": "province_abbreviation",
-        "datatype": "str"
+        "province_map": {
+          "BC": ["BRITISH COLUMBIA", "B.C.", "B.C", "RITISH COLUMBIA"],
+          "AB": ["ALBERTA"],
+          "SK": ["SASKATCHEWAN"],
+          "MB": ["MANITOBA"],
+          "ON": ["ON", "ONTAIRO"],
+          "QC": ["QUEBEC"],
+          "NB": ["NEW BRUNSWICK"],
+          "NS": ["NOVA SCOTIA"],
+          "YT": ["YUKON"],
+          "NT": ["NORTHWEST TERRITORIES"],
+          "NU": ["NUNAVUT"]
+        }
       }
     },
     "country": {
