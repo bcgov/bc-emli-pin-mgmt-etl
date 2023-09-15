@@ -85,7 +85,6 @@ ltsa_parser.parse_sftp_files(
     input_directory=args.sftp_local_path, output_directory=args.processed_data_path
 )
 
-
 # Step 3: Write the above processed data to the PostgreSQL database
 postgres_writer.run(
     input_directory=args.processed_data_path,
