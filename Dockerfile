@@ -13,7 +13,7 @@ RUN pip install -r requirements.txt
 # Set the user to non-root (user ID 1001)
 USER 1001
 
-# Define the command to run when the container starts
+# Define the command to run when the container starts, including data_rules_url
 CMD python etl.py \
     --sftp_host=${sftp_host} \
     --sftp_port=${sftp_port} \
@@ -27,4 +27,5 @@ CMD python etl.py \
     --db_host=${db_host} \
     --db_port=${db_port} \
     --db_username=${db_username} \
-    --db_password=${db_password}
+    --db_password=${db_password} \
+    --data_rules_url=${data_rules_url}
