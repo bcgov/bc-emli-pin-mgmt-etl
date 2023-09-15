@@ -1,22 +1,75 @@
 import json
 import pandas as pd
-import datetime
 import numpy as np
 import requests
 
 
 def pid_parser(pids):
-    pids = (
-        str(sorted(list(set(pids))))
-        .replace("[", "")
-        .replace("]", "")
-        .replace(",", " |")
+    # Combine and format PIDs as a string
+    return " | ".join(sorted(set(map(str, pids))))
+
+
+def load_data_cleaning_rules(data_rules_url):
+    # Load data cleaning rules from a JSON file hosted on GitHub
+    response = requests.get(data_rules_url)
+    if response.status_code == 200:
+        data_cleaning = json.loads(response.text)
+        return data_cleaning
+    else:
+        raise Exception(f"Failed to fetch data cleaning rules from {data_rules_url}")
+
+
+def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
+    # Load data cleaning rules from the specified GitHub URL
+    data_cleaning = load_data_cleaning_rules(data_rules_url)
+
+    # Apply cleaning rules to each column
+    for column, rule in data_cleaning["column_rules"].items():
+        if "replace_exact_values" in rule.keys():
+            for replacement in rule["replace_exact_values"]:
+                active_pin_df[column] = active_pin_df[column].replace(
+                    rule["replace_exact_values"][replacement], replacement
+                )
+
+        if "remove_characters" in rule.keys():
+            for replacement in rule["remove_characters"]:
+                active_pin_df[column] = active_pin_df[column].str.replace(
+                    replacement, ""
+                )
+
+        if "trim_after_comma" in rule.keys():
+            active_pin_df[column] = active_pin_df[column].apply(
+                lambda x: x.split(",")[0] if isinstance(x, str) else x
+            )
+
+        if "to_uppercase" in rule.keys():
+            active_pin_df[column] = active_pin_df[column].apply(
+                lambda x: x.upper() if isinstance(x, str) else x
+            )
+
+        if "switch_column_value" in rule.keys():
+            from_column = rule["switch_column_value"]["from_column"]
+            to_column = rule["switch_column_value"]["to_column"]
+            datatype = rule["switch_column_value"]["datatype"]
+
+            for value in active_pin_df[from_column]:
+                if datatype == "int" and value and value.isdigit():
+                    active_pin_df[to_column] = np.where(
+                        (active_pin_df[from_column] == value),
+                        active_pin_df[from_column],
+                        active_pin_df[to_column],
+                    )
+
+    active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
+    print(
+        f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'active_pin.csv'}"
     )
-    return pids
 
 
-# Parses csv files from input_directory and outputs a single formatted csv file into the output_directory
 def parse_ltsa_files(input_directory, output_directory, data_rules_url):
+    # Read and process CSV files
+
+    # 1_title.csv
     title_df = (
         pd.read_csv(
             input_directory + "1_title.csv",
@@ -35,36 +88,39 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
                 "FRM_LT_DISTRICT_CD": str,
             },
         )
-        .map(lambda x: x.strip() if isinstance(x, str) else x)
+        .applymap(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
     )
-    print(f"READ FILE----------------1_title.csv")
+    print("READ FILE----------------1_title.csv")
 
+    # 2_parcel.csv
     parcel_df = (
         pd.read_csv(
             input_directory + "2_parcel.csv",
             usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
             dtype={"PRMNNT_PRCL_ID": int, "PRCL_STTS_CD": str},
         )
-        .map(lambda x: x.strip() if isinstance(x, str) else x)
+        .applymap(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
     )
-    print(f"READ FILE----------------2_parcel.csv")
+    print("READ FILE----------------2_parcel.csv")
 
+    # 3_titleparcel.csv
     title_parcel_df = (
         pd.read_csv(
             input_directory + "3_titleparcel.csv",
             usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
             dtype={"TITLE_NMBR": str, "LTB_DISTRICT_CD": str, "PRMNNT_PRCL_ID": int},
         )
-        .map(lambda x: x.strip() if isinstance(x, str) else x)
+        .applymap(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
     )
-    print(f"READ FILE----------------3_titleparcel.csv")
+    print("READ FILE----------------3_titleparcel.csv")
 
+    # 4_titleowner.csv
     title_owner_df = (
         pd.read_csv(
             input_directory + "4_titleowner.csv",
@@ -99,65 +155,54 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
                 "ADDRS_PSTL_CD": str,
             },
         )
-        .map(lambda x: x.strip() if isinstance(x, str) else x)
+        .applymap(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
     )
-    print(f"READ FILE----------------4_titleowner.csv")
+    print("READ FILE----------------4_titleowner.csv")
 
     # Join dataframes
-    print(f"NUMBER OF ROWS IN title_owner_df: {len(title_owner_df)}")
-    print(f"NUMBER OF ROWS IN title_df: {len(title_df)}")
     title_titleowner_df = pd.merge(
         title_owner_df, title_df, on=["TITLE_NMBR", "LTB_DISTRICT_CD"]
     )
-    print(f"DATAFRAMES MERGED----------------title_owner_df, title_df")
-    print(
-        f"NUMBER OF ROWS IN MERGED DATAFRAME title_titleowner_df: {len(title_titleowner_df)}"
-    )
+    print("DATAFRAMES MERGED----------------title_owner_df, title_df")
+    print(f"NUMBER OF ROWS IN title_titleowner_df: {len(title_titleowner_df)}")
 
-    print(f"NUMBER OF ROWS IN title_parcel_df: {len(title_parcel_df)}")
-    print(f"NUMBER OF ROWS IN parcel_df: {len(parcel_df)}")
     titleparcel_parcel_df = pd.merge(title_parcel_df, parcel_df, on="PRMNNT_PRCL_ID")
-    print(f"DATAFRAMES MERGED----------------title_parcel_df AND parcel_df")
-    print(
-        f"NUMBER OF ROWS IN MERGED DATAFRAME titleparcel_parcel_df: {len(titleparcel_parcel_df)}"
-    )
+    print("DATAFRAMES MERGED----------------title_parcel_df AND parcel_df")
+    print(f"NUMBER OF ROWS IN titleparcel_parcel_df: {len(titleparcel_parcel_df)}")
 
     active_pin_df = pd.merge(
         title_titleowner_df, titleparcel_parcel_df, on=["TITLE_NMBR", "LTB_DISTRICT_CD"]
     )
-    print(
-        f"DATAFRAMES MERGED----------------title_titleowner_df, titleparcel_parcel_df"
-    )
-    print(f"NUMBER OF ROWS IN MERGED DATAFRAME active_pin_df: {len(active_pin_df)}")
+    print("DATAFRAMES MERGED----------------title_titleowner_df, titleparcel_parcel_df")
+    print(f"NUMBER OF ROWS IN active_pin_df: {len(active_pin_df)}")
 
-    # Group by title number to get a list of active pids associated with each title
+    # Filter out "I" status parcels
     active_parcel_df = active_pin_df.loc[active_pin_df["PRCL_STTS_CD"] != "I"]
 
+    # Group by title number to get a list of active pids associated with each title
     titlenumber_pids_df = (
         active_parcel_df.groupby("TITLE_NMBR")["PRMNNT_PRCL_ID"]
         .apply(list)
         .reset_index(name="pids")
     )
-    print(f"GROUPED DATAFRAME CREATED----------------titlenumber_pids_df")
+    print("GROUPED DATAFRAME CREATED----------------titlenumber_pids_df")
 
-    # For each title number in grouped_df, put list of pids in proper sorted string format
+    # Format PIDs as strings
     titlenumber_pids_df["pids"] = titlenumber_pids_df["pids"].apply(pid_parser)
 
     # Merge dataframes to add in PIDs column and drop duplicate rows
-    print(f"NUMBER OF ROWS IN active_pin_df: {len(active_pin_df)}")
-    print(f"NUMBER OF ROWS IN titlenumber_pids_df: {len(titlenumber_pids_df)}")
     active_pin_df = pd.merge(active_pin_df, titlenumber_pids_df, on="TITLE_NMBR").drop(
         columns=["PRMNNT_PRCL_ID"]
     )
-    print(f"DATAFRAMES MERGED----------------active_pin_df, titlenumber_pids_df")
-    print(f"NUMBER OF ROWS IN MERGED DATAFRAME active_pin_df: {len(active_pin_df)}")
+    print("DATAFRAMES MERGED----------------active_pin_df, titlenumber_pids_df")
 
+    # Remove duplicate rows
     active_pin_df = active_pin_df.loc[active_pin_df.astype(str).drop_duplicates().index]
-    print(f"DUPLICATE ROWS DROPPED----------------active_pin_df")
-    print(f"NUMBER OF ROWS IN MERGED DATAFRAME active_pin_df: {len(active_pin_df)}")
+    print("DUPLICATE ROWS DROPPED----------------active_pin_df")
 
+    # Rename dataframe columns
     active_pin_df = active_pin_df.rename(
         columns={
             "TITLE_NMBR": "title_number",
@@ -179,7 +224,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             "ADDRS_PSTL_CD": "postal_code",
         }
     )
-    print(f"DATAFRAME COLUMNS RENAMED----------------active_pin_df")
+    print("DATAFRAME COLUMNS RENAMED----------------active_pin_df")
 
     clean_active_pin_df(active_pin_df, output_directory, data_rules_url)
 
@@ -188,12 +233,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
 
     # Write to output file
-    # current_date_time = str(datetime.datetime.now())
-    # active_pin_df.to_csv(
-    #     output_directory + "processed_data_" + current_date_time + ".csv", index=False
-    # )
     active_pin_df.to_csv(output_directory + "active_pin_uncleaned.csv", index=False)
-
     print(
         f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'active_pin_uncleaned.csv'}"
     )
@@ -291,3 +331,19 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
 def run(input_directory, output_directory, data_rules_url):
     # Parse the files
     parse_ltsa_files(input_directory, output_directory, data_rules_url)
+
+
+if __name__ == "__main__":
+    # Set your input directory path (where CSV files are located)
+    input_directory = "input_directory_path/"
+
+    # Set your output directory path (where cleaned and processed data will be saved)
+    output_directory = "output_directory_path/"
+
+    # Specify the URL of the data_rules.json file in your GitHub repository
+    data_rules_url = (
+        "https://raw.githubusercontent.com/your-username/your-repo/main/data_rules.json"
+    )
+
+    # Run the ETL process
+    run(input_directory, output_directory, data_rules_url)

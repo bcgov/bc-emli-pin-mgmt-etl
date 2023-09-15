@@ -68,6 +68,13 @@ parser.add_argument(
     help="Number of records to be written to the db in one batch.",
 )
 
+# data_rules_url argument
+parser.add_argument(
+    "--data_rules_url",
+    type=str,
+    help="URL to the data_rules.json file in a public GitHub repository.",
+)
+
 args = parser.parse_args()
 
 # Step 1: Download the SFTP files to the PVC
@@ -88,12 +95,12 @@ ltsa_parser.run(
 )
 
 # Step 3: Write the above processed data to the PostgreSQL database
-postgres_writer.run(
-    input_directory=args.processed_data_path,
-    database_name=args.db_name,
-    batch_size=args.db_write_batch_size,
-    host=args.db_host,
-    port=args.db_port,
-    user=args.db_username,
-    password=args.db_password,
-)
+# postgres_writer.run(
+#     input_directory=args.processed_data_path,
+#     database_name=args.db_name,
+#     batch_size=args.db_write_batch_size,
+#     host=args.db_host,
+#     port=args.db_port,
+#     user=args.db_username,
+#     password=args.db_password,
+# )
