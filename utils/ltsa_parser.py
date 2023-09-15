@@ -290,10 +290,3 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
 def run(input_directory, output_directory, data_rules_url):
     # Parse the files
     parse_ltsa_files(input_directory, output_directory, data_rules_url)
-
-
-run(
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-    "https://raw.githubusercontent.com/bcgov/bc-emli-pin-mgmt-etl/main/data_rules.json",
-)
