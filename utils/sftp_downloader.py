@@ -1,37 +1,83 @@
 import paramiko
 
-
 def set_sftp_conn(host, port, username, password):
-    """Set sftp connection to get the files, using config.py"""
-    # Connect to sftp
+    """
+    Set up an SFTP connection.
+
+    Args:
+        host (str): The hostname or IP address of the SFTP server.
+        port (int): The port number to connect to the SFTP server.
+        username (str): The username for authentication.
+        password (str): The password for authentication.
+
+    Returns:
+        paramiko.SFTPClient: An SFTP client object.
+    """
     transport = paramiko.Transport((host, port))
-    print("connecting to SFTP...")
+    print("Connecting to SFTP...")
     transport.connect(username=username, password=password)
     sftp = paramiko.SFTPClient.from_transport(transport)
-    print("CONNECTION ESTABLISHED...")
+    print("Connection established...")
     return sftp
 
-
 def get_files_to_download_from_sftp(sftp, remote_path):
-    """Get the list of files to download from the SFTP server"""
-    # Get files in directory
+    """
+    Get the list of files to download from the SFTP server.
+
+    Args:
+        sftp (paramiko.SFTPClient): An SFTP client object.
+        remote_path (str): The remote directory path on the SFTP server.
+
+    Returns:
+        list of str: A list of filenames to download.
+    """
     files_to_download = sftp.listdir(remote_path)
-    if len(files_to_download) <= 0:
-        print("NOW NEW FILES UPLOADED...")
+    if not files_to_download:
+        print("No new files uploaded...")
     return files_to_download
 
-
 def download_files_from_sftp(sftp, files_list, remote_path, local_path):
-    for file in files_list:
-        sftp.get(remote_path + file, local_path + file)
-        print(f"DOWNLOADED----------------{remote_path+file}")
+    """
+    Download files from SFTP server to the local directory.
 
+    Args:
+        sftp (paramiko.SFTPClient): An SFTP client object.
+        files_list (list of str): A list of filenames to download.
+        remote_path (str): The remote directory path on the SFTP server.
+        local_path (str): The local directory path where files will be downloaded.
+    """
+    for file in files_list:
+        remote_file_path = remote_path + file
+        local_file_path = local_path + file
+        sftp.get(remote_file_path, local_file_path)
+        print(f"Downloaded: {remote_file_path} -> {local_file_path}")
 
 def run(host, port, username, password, remote_path, local_path):
-    # Establish sftp connection
+    """
+    Main function to establish an SFTP connection and download files.
+
+    Args:
+        host (str): The hostname or IP address of the SFTP server.
+        port (int): The port number to connect to the SFTP server.
+        username (str): The username for authentication.
+        password (str): The password for authentication.
+        remote_path (str): The remote directory path on the SFTP server.
+        local_path (str): The local directory path where files will be downloaded.
+    """
+    # Establish SFTP connection
     sftp_conn = set_sftp_conn(host, port, username, password)
 
     files_to_download = get_files_to_download_from_sftp(sftp_conn, remote_path)
 
     # Download the files
     download_files_from_sftp(sftp_conn, files_to_download, remote_path, local_path)
+
+if __name__ == "__main__":
+    host = "your_host"
+    port = 22  # Replace with your port
+    username = "your_username"
+    password = "your_password"
+    remote_path = "/remote/path/"
+    local_path = "/local/path/"
+
+    run(host, port, username, password, remote_path, local_path)
