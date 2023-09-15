@@ -6,7 +6,7 @@ import requests
 
 def pid_parser(pids):
     # Combine and format PIDs as a string
-    return " | ".join(sorted(set(map(str, pids))))
+    return "|".join(sorted(set(map(str, pids))))
 
 
 def load_data_cleaning_rules(data_rules_url):
