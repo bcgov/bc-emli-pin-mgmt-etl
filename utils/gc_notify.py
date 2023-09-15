@@ -1,7 +1,10 @@
 from notifications_python_client.notifications import NotificationsAPIClient
 from notifications_python_client import prepare_upload
 
-def gc_notify_log(api_key, base_url, email_address, template_id, file_path, personalisation):
+
+def gc_notify_log(
+    api_key, base_url, email_address, template_id, file_path, personalisation
+):
     """
     Send an email notification with a log file attachment using GC Notify.
 
@@ -18,18 +21,20 @@ def gc_notify_log(api_key, base_url, email_address, template_id, file_path, pers
     """
     try:
         # Create a NotificationsAPIClient instance
-        notifications_client = NotificationsAPIClient(api_key=api_key, base_url=base_url)
+        notifications_client = NotificationsAPIClient(
+            api_key=api_key, base_url=base_url
+        )
 
         # Open the file for uploading
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             # Attach the log file to personalisation data
-            personalisation['link_to_file'] = prepare_upload(f)
+            personalisation["link_to_file"] = prepare_upload(f)
 
         # Send the email notification
         response = notifications_client.send_email_notification(
             email_address=email_address,
             template_id=template_id,
-            personalisation=personalisation
+            personalisation=personalisation,
         )
 
         return response
@@ -37,6 +42,7 @@ def gc_notify_log(api_key, base_url, email_address, template_id, file_path, pers
     except Exception as e:
         # Handle any exceptions (e.g., API errors) here
         raise e
+
 
 def run(api_key, base_url, email_address, template_id, file_path, personalisation):
     """
@@ -51,20 +57,20 @@ def run(api_key, base_url, email_address, template_id, file_path, personalisatio
         personalisation (dict): Personalization data for the email.
     """
     # Send the email notification
-    response = gc_notify_log(api_key, base_url, email_address, template_id, file_path, personalisation)
+    response = gc_notify_log(
+        api_key, base_url, email_address, template_id, file_path, personalisation
+    )
     print(response)  # Print the response from GC Notify
+
 
 if __name__ == "__main__":
     # Define your API key, base URL, email address, template ID, file path, and personalization data
-    api_key = 'your_api_key'
-    base_url = 'https://api.notification.canada.ca'
-    email_address = 'recipient@example.com'
-    template_id = 'your_template_id'
-    file_path = '/path/to/your/logfile.log'
-    personalisation = {
-        'first_name': 'Amala',
-        'Status': '2018-01-01'
-    }
+    api_key = "your_api_key"
+    base_url = "https://api.notification.canada.ca"
+    email_address = "recipient@example.com"
+    template_id = "your_template_id"
+    file_path = "/path/to/your/logfile.log"
+    personalisation = {"first_name": "Amala", "Status": "2018-01-01"}
 
     # Run the email notification process with the specified parameters
     run(api_key, base_url, email_address, template_id, file_path, personalisation)
