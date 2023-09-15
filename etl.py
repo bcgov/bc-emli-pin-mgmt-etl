@@ -82,7 +82,9 @@ sftp_downloader.run(
 
 # Step 2: Process the downloaded SFTP files and write to output folder
 ltsa_parser.run(
-    input_directory=args.local_path, output_directory=args.processed_data_path
+    input_directory=args.sftp_local_path,
+    output_directory=args.processed_data_path,
+    data_rules_url=args.data_rules_url,
 )
 
 # Step 3: Write the above processed data to the PostgreSQL database

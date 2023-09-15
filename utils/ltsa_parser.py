@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import datetime
 import numpy as np
+import requests
 
 
 def pid_parser(pids):
@@ -15,7 +16,7 @@ def pid_parser(pids):
 
 
 # Parses csv files from input_directory and outputs a single formatted csv file into the output_directory
-def parse_ltsa_files(input_directory, output_directory):
+def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     title_df = (
         pd.read_csv(
             input_directory + "1_title.csv",
@@ -180,10 +181,10 @@ def parse_ltsa_files(input_directory, output_directory):
     )
     print(f"DATAFRAME COLUMNS RENAMED----------------active_pin_df")
 
-    clean_active_pin_df(active_pin_df, output_directory)
+    clean_active_pin_df(active_pin_df, output_directory, data_rules_url)
 
-    active_pin_df = pd.merge(active_pin_df, titlenumber_pids_df, on="TITLE_NMBR").drop(
-        columns=["occupation"]
+    active_pin_df = active_pin_df.drop(
+        columns=["occupation", "province_long", "PRCL_STTS_CD"]
     )
 
     # Write to output file
@@ -197,31 +198,33 @@ def parse_ltsa_files(input_directory, output_directory):
         f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'active_pin_uncleaned.csv'}"
     )
 
-    clean_active_pin_df(active_pin_df, output_directory)
 
+def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
+    print(
+        f"GETTING DATA CLEANING RULES FROM CONFIG FILE:----------------{data_rules_url}"
+    )
 
-def clean_active_pin_df(active_pin_df, output_directory):
-    # Do cleaning before dropping columns
-    # for occupation rule: from column, to column, datatype
-    # Change to github directory
+    json_url = data_rules_url
 
-    with open("cleaning_rules.json", "r") as rule_file:
-        data_cleaning = json.load(rule_file)
+    try:
+        response = requests.get(json_url)
+        response.raise_for_status()  # Check for any errors in the request
+
+        # Parse the JSON content into a Python dictionary
+        data_rules = json.loads(response.text)
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error: {e}")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
 
     # Apply cleaning rules to each column
-    for column, rule in data_cleaning["column_rules"].items():
+    for column, rule in data_rules["column_rules"].items():
         # Replace Exact Values - Looks for exact string match in column and replaces it with value
         if "replace_exact_values" in rule.keys():
             for replacement in rule["replace_exact_values"]:
                 active_pin_df[column] = active_pin_df[column].replace(
                     rule["replace_exact_values"][replacement], replacement
-                )
-
-        # Remove Characters - Looks for strings containing character in column and removes character
-        if "remove_characters" in rule.keys():
-            for replacement in rule["remove_characters"]:
-                active_pin_df[column] = active_pin_df[column].str.replace(
-                    replacement, ""
                 )
 
         # Trim after comma
@@ -230,6 +233,13 @@ def clean_active_pin_df(active_pin_df, output_directory):
                 lambda x: x.split(",")[0] if isinstance(x, str) else x
             )
 
+        # Remove Characters - Looks for strings containing character in column and removes character
+        if "remove_characters" in rule.keys():
+            for replacement in rule["remove_characters"]:
+                active_pin_df[column] = active_pin_df[column].str.replace(
+                    replacement, ""
+                )
+
         # To uppercase
         if "to_uppercase" in rule.keys():
             active_pin_df[column] = active_pin_df[column].apply(
@@ -237,11 +247,12 @@ def clean_active_pin_df(active_pin_df, output_directory):
             )
 
         # Switch value from one column, from_column, to another, to_column
-        if "switch_column_value" in rule.keys():
-            from_column = rule["switch_column_value"]["from_column"]
-            to_column = rule["switch_column_value"]["to_column"]
-            datatype = rule["switch_column_value"]["datatype"]
+    if "switch_column_value" in rule.keys():
+        from_column = rule["switch_column_value"]["from_column"]
+        to_column = rule["switch_column_value"]["to_column"]
 
+        if "datatype" in rule["switch_column_value"]:
+            datatype = rule["switch_column_value"]["datatype"]
             for value in active_pin_df[from_column]:
                 if datatype == "int" and value and value.isdigit():
                     active_pin_df[to_column] = np.where(
@@ -250,6 +261,26 @@ def clean_active_pin_df(active_pin_df, output_directory):
                         active_pin_df[to_column],
                     )
 
+        if "province_map" in rule["switch_column_value"]:
+            province_map = rule["switch_column_value"]["province_map"]
+            for replacement in province_map:
+                active_pin_df[column] = active_pin_df[column].replace(
+                    province_map[replacement], replacement
+                )
+
+            for value in province_map.keys():
+                active_pin_df[to_column] = np.where(
+                    (active_pin_df[from_column] == value),
+                    active_pin_df[from_column],
+                    active_pin_df[to_column],
+                )
+
+    print(f"CLEANING RULES APPLIED TO FILE:----------------active_pin.csv")
+
+    active_pin_df = active_pin_df.drop(
+        columns=["occupation", "province_long", "PRCL_STTS_CD"]
+    )
+
     active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
 
     print(
@@ -257,6 +288,6 @@ def clean_active_pin_df(active_pin_df, output_directory):
     )
 
 
-def run(input_directory, output_directory):
+def run(input_directory, output_directory, data_rules_url):
     # Parse the files
-    parse_ltsa_files(input_directory, output_directory)
+    parse_ltsa_files(input_directory, output_directory, data_rules_url)
