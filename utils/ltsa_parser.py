@@ -247,11 +247,12 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
             )
 
         # Switch value from one column, from_column, to another, to_column
-        if "switch_column_value" in rule.keys():
-            from_column = rule["switch_column_value"]["from_column"]
-            to_column = rule["switch_column_value"]["to_column"]
-            datatype = rule["switch_column_value"]["datatype"]
+    if "switch_column_value" in rule.keys():
+        from_column = rule["switch_column_value"]["from_column"]
+        to_column = rule["switch_column_value"]["to_column"]
 
+        if "datatype" in rule["switch_column_value"]:
+            datatype = rule["switch_column_value"]["datatype"]
             for value in active_pin_df[from_column]:
                 if datatype == "int" and value and value.isdigit():
                     active_pin_df[to_column] = np.where(
@@ -259,6 +260,20 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
                         active_pin_df[from_column],
                         active_pin_df[to_column],
                     )
+
+        if "province_map" in rule["switch_column_value"]:
+            province_map = rule["switch_column_value"]["province_map"]
+            for replacement in province_map:
+                active_pin_df[column] = active_pin_df[column].replace(
+                    province_map[replacement], replacement
+                )
+
+            for value in province_map.keys():
+                active_pin_df[to_column] = np.where(
+                    (active_pin_df[from_column] == value),
+                    active_pin_df[from_column],
+                    active_pin_df[to_column],
+                )
 
     print(f"CLEANING RULES APPLIED TO FILE:----------------active_pin.csv")
 
