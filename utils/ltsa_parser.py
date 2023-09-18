@@ -8,7 +8,6 @@ def pid_parser(pids):
     # Combine and format PIDs as a string
     return "|".join(sorted(set(map(str, pids))))
 
-
 def load_data_cleaning_rules(data_rules_url):
     # Load data cleaning rules from a JSON file hosted on GitHub
     response = requests.get(data_rules_url)
@@ -43,7 +42,7 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
             for replacement in rule["remove_characters"]:
                 active_pin_df[column] = active_pin_df[column].str.replace(
                     replacement, ""
-                )
+                ).replace("  ", " ")
 
         # To uppercase
         if "to_uppercase" in rule.keys():
@@ -91,7 +90,6 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
     print(
         f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'active_pin.csv'}"
     )
-
 
 def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     # Read and process CSV files
@@ -205,12 +203,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     print("DATAFRAMES MERGED----------------title_titleowner_df, titleparcel_parcel_df")
     print(f"NUMBER OF ROWS IN active_pin_df: {len(active_pin_df)}")
 
-    # Filter out "I" status parcels
-    active_parcel_df = active_pin_df.loc[active_pin_df["PRCL_STTS_CD"] != "I"]
-
     # Group by title number to get a list of active pids associated with each title
     titlenumber_pids_df = (
-        active_parcel_df.groupby(["TITLE_NMBR", "LTB_DISTRICT_CD"])["PRMNNT_PRCL_ID"]
+        active_pin_df.groupby(["TITLE_NMBR", "LTB_DISTRICT_CD"])["PRMNNT_PRCL_ID"]
         .apply(list)
         .reset_index(name="pids")
     )
@@ -264,7 +259,6 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     print(
         f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'raw_ltsa_data.csv'}"
     )
-
 
 def run(input_directory, output_directory, data_rules_url):
     # Parse the files
