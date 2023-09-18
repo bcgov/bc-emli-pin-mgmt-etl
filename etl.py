@@ -85,6 +85,67 @@ def main():
         epilog="Please check the repo: https://github.com/bcgov/bc-emli-pin-mgmt-etl",
     )
 
+    # Add command-line arguments for sftp_downloader
+    parser.add_argument(
+        "--sftp_host", type=str, help="Host address of the LTSA SFTP server."
+    )
+    parser.add_argument(
+        "--sftp_port", type=int, default=22, help="Port number of the LTSA sftp server."
+    )
+    parser.add_argument("--sftp_username", type=str, help="Username of the SFTP login.")
+    parser.add_argument("--sftp_password", type=str, help="Password of the SFTP login.")
+    parser.add_argument(
+        "--sftp_remote_path",
+        type=str,
+        help="Remote path of the SFTP folder to copy the files from.",
+    )
+    parser.add_argument(
+        "--sftp_local_path",
+        type=str,
+        help="Local folder path to download the files to.",
+    )
+    
+    # Add command-line arguments for lstsa_parser
+    parser.add_argument(
+        "--processed_data_path",
+        type=str,
+        help="Local output folder for the processed csv files.",
+    )
+
+    # Add command-line arguments for the postgres_writer
+    parser.add_argument("--db_host", type=str, help="Host name of the PostgresDB.")
+    parser.add_argument(
+        "--db_port", type=int, default=5432, help="Port number of the Postgres DB."
+    )
+    parser.add_argument("--db_username", type=str, help="Username of the SFTP login.")
+    parser.add_argument("--db_password", type=str, help="Password of the SFTP login.")
+    parser.add_argument(
+        "--db_name", type=str, help="Name of the DB in the Postgres DB."
+    )
+    parser.add_argument(
+        "--db_write_batch_size",
+        type=int,
+        default=1000,
+        help="Number of records to be written to the db in one batch.",
+    )
+    parser.add_argument(
+        "--data_rules_url",
+        type=str,
+        help="URL to the data_rules.json file in a public GitHub repository.",
+    )
+
+    # Add command-line arguments for GC Notify
+    parser.add_argument("--api_key", type=str, help="Your GC Notify API key.")
+    parser.add_argument(
+        "--base_url", type=str, help="The base URL of the GC Notify API."
+    )
+    parser.add_argument(
+        "--email_address", type=str, help="The recipient's email address."
+    )
+    parser.add_argument(
+        "--template_id", type=str, help="The ID of the email template to use."
+    )
+
     args = parser.parse_args()
 
     try:
@@ -119,11 +180,6 @@ def main():
         logging.error(f"An error occurred: {str(e)}")
 
     finally:
-        api_key = "YOUR_API_KEY"
-        base_url = "https://api.notification.canada.ca"
-        email_address = "recipient@example.com"
-        template_id = "YOUR_TEMPLATE_ID"
-
         personalisation = {
             "log_filename": os.path.basename(log_filename),
             "job_status": "Success" if "e" not in locals() else "Failure",
@@ -131,10 +187,10 @@ def main():
         }
 
         send_email_notification(
-            api_key,
-            base_url,
-            email_address,
-            template_id,
+            args.api_key,
+            args.base_url,
+            args.email_address,
+            args.template_id,
             log_filename,
             personalisation["job_status"],
             personalisation.get("error_message"),
