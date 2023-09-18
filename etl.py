@@ -95,12 +95,12 @@ ltsa_parser.run(
 )
 
 # Step 3: Write the above processed data to the PostgreSQL database
-postgres_writer.run(
-    input_directory=args.processed_data_path,
-    database_name=args.db_name,
-    batch_size=args.db_write_batch_size,
-    host=args.db_host,
-    port=args.db_port,
-    user=args.db_username,
-    password=args.db_password,
-)
+# postgres_writer.run(
+#     input_directory=args.processed_data_path,
+#     database_name=args.db_name,
+#     batch_size=args.db_write_batch_size,
+#     host=args.db_host,
+#     port=args.db_port,
+#     user=args.db_username,
+#     password=args.db_password,
+# )

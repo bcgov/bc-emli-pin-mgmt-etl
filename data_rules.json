@@ -155,7 +155,8 @@
     "province_abbreviation": {
       "to_uppercase": "to_uppercase",
       "replace_exact_values": {
-        "BC": ["B.", "BR"]
+        "BC": ["B.", "BR"],
+        "QC": ["PQ"]
       }
     },
     "province_long": {
