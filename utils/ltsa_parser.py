@@ -130,7 +130,8 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             "TTL_STTS_CD": "title_status",
             "FRM_TTL_NMBR": "from_title_number",
             "FRM_LT_DISTRICT_CD": "from_land_title_district",
-        }, inplace=True
+        },
+        inplace=True,
     )
 
     title_df.to_csv(output_directory + "raw_title_data.csv", index=False)
@@ -152,12 +153,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     print("READ FILE----------------2_parcel.csv")
 
     parcel_df = parcel_df.rename(
-        columns={
-            "PRMNNT_PRCL_ID": "pid",
-            "PRCL_STTS_CD": "parcel_status"
-        }
+        columns={"PRMNNT_PRCL_ID": "pid", "PRCL_STTS_CD": "parcel_status"}
     )
-    
+
     parcel_df.to_csv(output_directory + "raw_parcel_data.csv", index=False)
     print(
         f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'raw_parcel_data.csv'}"
@@ -268,7 +266,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     print(f"NUMBER OF ROWS IN titleparcel_parcel_df: {len(titleparcel_parcel_df)}")
 
     active_pin_df = pd.merge(
-        title_titleowner_df, titleparcel_parcel_df, on=["title_number", "land_title_district"]
+        title_titleowner_df,
+        titleparcel_parcel_df,
+        on=["title_number", "land_title_district"],
     )
     print("DATAFRAMES MERGED----------------title_titleowner_df, titleparcel_parcel_df")
     print(f"NUMBER OF ROWS IN active_pin_df: {len(active_pin_df)}")
