@@ -8,6 +8,7 @@ def pid_parser(pids):
     # Combine and format PIDs as a string
     return "|".join(sorted(set(map(str, pids))))
 
+
 def load_data_cleaning_rules(data_rules_url):
     # Load data cleaning rules from a JSON file hosted on GitHub
     response = requests.get(data_rules_url)
@@ -40,9 +41,11 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
         # Remove Characters - Looks for strings containing character in column and removes character
         if "remove_characters" in rule.keys():
             for replacement in rule["remove_characters"]:
-                active_pin_df[column] = active_pin_df[column].str.replace(
-                    replacement, ""
-                ).replace("  ", " ")
+                active_pin_df[column] = (
+                    active_pin_df[column]
+                    .str.replace(replacement, "")
+                    .replace("  ", " ")
+                )
 
         # To uppercase
         if "to_uppercase" in rule.keys():
@@ -90,6 +93,7 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
     print(
         f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'active_pin.csv'}"
     )
+
 
 def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     # Read and process CSV files
@@ -259,6 +263,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     print(
         f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'raw_ltsa_data.csv'}"
     )
+
 
 def run(input_directory, output_directory, data_rules_url):
     # Parse the files
