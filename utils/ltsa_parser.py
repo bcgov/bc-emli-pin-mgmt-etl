@@ -304,14 +304,14 @@ def run(input_directory, output_directory, data_rules_url):
 
 if __name__ == "__main__":
     # Set your input directory path (where CSV files are located)
-    input_directory = "input_directory_path/"
+    input_directory = "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/"
 
     # Set your output directory path (where cleaned and processed data will be saved)
-    output_directory = "output_directory_path/"
+    output_directory = "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/"
 
     # Specify the URL of the data_rules.json file in your GitHub repository
     data_rules_url = (
-        "https://raw.githubusercontent.com/your-username/your-repo/main/data_rules.json"
+        "https://raw.githubusercontent.com/bcgov/bc-emli-pin-mgmt-etl/main/data_rules.json"
     )
 
     # Run the ETL process
