@@ -260,9 +260,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
 
     # Write to output file
-
     active_pin_df.to_csv(output_directory + "raw_ltsa_data.csv", index=False)
-
     print(
         f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'raw_ltsa_data.csv'}"
     )
