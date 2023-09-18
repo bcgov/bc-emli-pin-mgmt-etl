@@ -41,8 +41,10 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
         # Remove Characters - Looks for strings containing character in column and removes character
         if "remove_characters" in rule.keys():
             for replacement in rule["remove_characters"]:
-                active_pin_df[column] = active_pin_df[column].str.replace(
-                    replacement, ""
+                active_pin_df[column] = (
+                    active_pin_df[column]
+                    .str.replace(replacement, "")
+                    .replace("  ", " ")
                 )
 
         # To uppercase
@@ -205,12 +207,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     print("DATAFRAMES MERGED----------------title_titleowner_df, titleparcel_parcel_df")
     print(f"NUMBER OF ROWS IN active_pin_df: {len(active_pin_df)}")
 
-    # Filter out "I" status parcels
-    active_parcel_df = active_pin_df.loc[active_pin_df["PRCL_STTS_CD"] != "I"]
-
     # Group by title number to get a list of active pids associated with each title
     titlenumber_pids_df = (
-        active_parcel_df.groupby(["TITLE_NMBR", "LTB_DISTRICT_CD"])["PRMNNT_PRCL_ID"]
+        active_pin_df.groupby(["TITLE_NMBR", "LTB_DISTRICT_CD"])["PRMNNT_PRCL_ID"]
         .apply(list)
         .reset_index(name="pids")
     )
