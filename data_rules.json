@@ -7,6 +7,18 @@
     "trim_after_comma": "Trims all text in a column after (and including) a comma"
   },
   "column_rules": {
+    "title_number": {
+      "to_uppercase": "to_uppercase"
+    },
+    "land_title_district": {
+      "to_uppercase": "to_uppercase"
+    },
+    "from_title_number": {
+      "to_uppercase": "to_uppercase"
+    },
+    "from_land_title_district": {
+      "to_uppercase": "to_uppercase"
+    },
     "given_name": {
       "to_uppercase": "to_uppercase"
     },
