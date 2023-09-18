@@ -30,21 +30,21 @@ Before running the BC PVS ETL Job, ensure you have the following prerequisites i
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/bcgov/bc-emli-pin-mgmt-etl.git```
+   git clone https://github.com/bcgov/bc-emli-pin-mgmt-etl.git
 
 2. Navigate to the project directory:
    ```bash
-   cd bc-emli-pin-mgmt-etl```
+   cd bc-emli-pin-mgmt-etl
 
 3. Install the required Python packages using pip:
    ```bash
-   pip install -r requirements.txt```
+   pip install -r requirements.txt
 
 ## Usage
 To run the BC PVS ETL Job, use the following command:
 
 ```bash
-   python etl_job.py [OPTIONS]```
+   python etl_job.py [OPTIONS]
 
 
 Replace `[OPTIONS]` with the necessary command-line arguments based on your specific configuration. See the Configuration section below for details on available options.
@@ -71,7 +71,8 @@ The BC PVS ETL Job supports various configuration options through command-line a
 --api_key: Your GC Notify API key for sending email notifications.
 --base_url: The base URL of the GC Notify API.
 --email_address: The recipient's email address for notifications.
---template_id: The ID of the email template to use for notifications.```
+--template_id: The ID of the email template to use for notifications.
+```
 
 Please ensure you have the necessary credentials and configurations for the LTSA SFTP server, PostgreSQL database, and GC Notify to successfully run the ETL job.
 
