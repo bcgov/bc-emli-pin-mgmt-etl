@@ -84,9 +84,7 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
 
     print(f"CLEANING RULES APPLIED TO FILE:----------------active_pin.csv")
 
-    active_pin_df = active_pin_df.drop(
-        columns=["occupation", "province_long", "parcel_status"]
-    )
+    active_pin_df = active_pin_df.drop(columns=["occupation", "parcel_status"])
 
     active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
 
