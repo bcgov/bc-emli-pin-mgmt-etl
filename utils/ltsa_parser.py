@@ -85,7 +85,7 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
     print(f"CLEANING RULES APPLIED TO FILE:----------------active_pin.csv")
 
     active_pin_df = active_pin_df.drop(
-        columns=["occupation", "province_long", "PRCL_STTS_CD"]
+        columns=["occupation", "province_long", "parcel_status"]
     )
 
     active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
@@ -304,14 +304,14 @@ def run(input_directory, output_directory, data_rules_url):
 
 if __name__ == "__main__":
     # Set your input directory path (where CSV files are located)
-    input_directory = "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/"
+    input_directory = "input_directory_path/"
 
     # Set your output directory path (where cleaned and processed data will be saved)
-    output_directory = "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/"
+    output_directory = "output_directory_path/"
 
     # Specify the URL of the data_rules.json file in your GitHub repository
     data_rules_url = (
-        "https://raw.githubusercontent.com/bcgov/bc-emli-pin-mgmt-etl/main/data_rules.json"
+        "https://raw.githubusercontent.com/your-username/your-repo/main/data_rules.json"
     )
 
     # Run the ETL process
