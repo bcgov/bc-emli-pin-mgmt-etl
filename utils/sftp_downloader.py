@@ -1,5 +1,6 @@
 import paramiko
 
+
 def set_sftp_conn(host, port, username, password):
     """
     Set up an SFTP connection.
@@ -20,6 +21,7 @@ def set_sftp_conn(host, port, username, password):
     print("Connection established...")
     return sftp
 
+
 def get_files_to_download_from_sftp(sftp, remote_path):
     """
     Get the list of files to download from the SFTP server.
@@ -36,6 +38,7 @@ def get_files_to_download_from_sftp(sftp, remote_path):
         print("No new files uploaded...")
     return files_to_download
 
+
 def download_files_from_sftp(sftp, files_list, remote_path, local_path):
     """
     Download files from SFTP server to the local directory.
@@ -51,6 +54,7 @@ def download_files_from_sftp(sftp, files_list, remote_path, local_path):
         local_file_path = local_path + file
         sftp.get(remote_file_path, local_file_path)
         print(f"Downloaded: {remote_file_path} -> {local_file_path}")
+
 
 def run(host, port, username, password, remote_path, local_path):
     """
@@ -71,6 +75,7 @@ def run(host, port, username, password, remote_path, local_path):
 
     # Download the files
     download_files_from_sftp(sftp_conn, files_to_download, remote_path, local_path)
+
 
 if __name__ == "__main__":
     host = "your_host"

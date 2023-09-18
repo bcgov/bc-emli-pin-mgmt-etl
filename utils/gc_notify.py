@@ -3,7 +3,10 @@ from notifications_python_client.notifications import NotificationsAPIClient
 import base64
 import json
 
-def gc_notify_log(api_key, base_url, email_address, template_id, file_path, personalisation):
+
+def gc_notify_log(
+    api_key, base_url, email_address, template_id, file_path, personalisation
+):
     """
     Send an email notification with a log file attachment using GC Notify.
 
@@ -20,20 +23,22 @@ def gc_notify_log(api_key, base_url, email_address, template_id, file_path, pers
     """
     try:
         # Create a NotificationsAPIClient instance
-        notifications_client = NotificationsAPIClient(api_key=api_key, base_url=base_url)
-        
+        notifications_client = NotificationsAPIClient(
+            api_key=api_key, base_url=base_url
+        )
+
         # Read and base64 encode the file
         with open(file_path, "rb") as f:
             file_data = f.read()
-            encoded_file = base64.b64encode(file_data).decode('utf-8')
-            
+            encoded_file = base64.b64encode(file_data).decode("utf-8")
+
         # Create a dictionary for the file attachment
         file_attachment = {
             "file": encoded_file,
             "filename": os.path.basename(file_path),
-            "sending_method": "attach"
+            "sending_method": "attach",
         }
-        
+
         # Add the file attachment to personalisation data
         personalisation["link_to_file"] = file_attachment
 
@@ -50,17 +55,21 @@ def gc_notify_log(api_key, base_url, email_address, template_id, file_path, pers
         # Handle any exceptions (e.g., API errors) here
         raise e
 
+
 def run(api_key, base_url, email_address, template_id, file_path, personalisation):
     try:
         # Send the email notification
-        response = gc_notify_log(api_key, base_url, email_address, template_id, file_path, personalisation)
-        
+        response = gc_notify_log(
+            api_key, base_url, email_address, template_id, file_path, personalisation
+        )
+
         # Pretty print the JSON response
         print(json.dumps(response, indent=4))
 
     except Exception as e:
         # Handle any exceptions (e.g., API errors) here
         raise e
+
 
 if __name__ == "__main__":
     # Define your API key, base URL, email address, template ID, file path, and personalization data
