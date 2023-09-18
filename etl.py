@@ -85,7 +85,7 @@ def main():
         epilog="Please check the repo: https://github.com/bcgov/bc-emli-pin-mgmt-etl",
     )
 
-    # Add command-line arguments for sftp_downloader
+    # Add back the previously deleted command-line arguments with comments
     parser.add_argument(
         "--sftp_host", type=str, help="Host address of the LTSA SFTP server."
     )
@@ -104,15 +104,11 @@ def main():
         type=str,
         help="Local folder path to download the files to.",
     )
-    
-    # Add command-line arguments for lstsa_parser
     parser.add_argument(
         "--processed_data_path",
         type=str,
         help="Local output folder for the processed csv files.",
     )
-
-    # Add command-line arguments for the postgres_writer
     parser.add_argument("--db_host", type=str, help="Host name of the PostgresDB.")
     parser.add_argument(
         "--db_port", type=int, default=5432, help="Port number of the Postgres DB."
@@ -134,7 +130,7 @@ def main():
         help="URL to the data_rules.json file in a public GitHub repository.",
     )
 
-    # Add command-line arguments for GC Notify
+    # Add command-line arguments for GC Notify with comments
     parser.add_argument("--api_key", type=str, help="Your GC Notify API key.")
     parser.add_argument(
         "--base_url", type=str, help="The base URL of the GC Notify API."
@@ -149,6 +145,7 @@ def main():
     args = parser.parse_args()
 
     try:
+        # Step 1: Download the SFTP files to the PVC
         sftp_downloader.run(
             host=args.sftp_host,
             port=args.sftp_port,
@@ -158,12 +155,14 @@ def main():
             local_path=args.sftp_local_path,
         )
 
+        # Step 2: Process the downloaded SFTP files and write to the output folder
         ltsa_parser.run(
             input_directory=args.sftp_local_path,
             output_directory=args.processed_data_path,
             data_rules_url=args.data_rules_url,
         )
 
+        # Step 3: Write the above processed data to the PostgreSQL database
         postgres_writer.run(
             input_directory=args.processed_data_path,
             database_name=args.db_name,
@@ -186,6 +185,7 @@ def main():
             "error_message": str(e) if "e" in locals() else None,
         }
 
+        # Send an email with the log file attachment regardless of success or error
         send_email_notification(
             args.api_key,
             args.base_url,
