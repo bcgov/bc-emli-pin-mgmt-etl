@@ -29,24 +29,24 @@ Before running the BC PVS ETL Job, ensure you have the following prerequisites i
 
 1. Clone the repository:
 
-   ```bash
+   ```
    git clone https://github.com/bcgov/bc-emli-pin-mgmt-etl.git
    ```
    
 2. Navigate to the project directory:
-   ```bash
+   ```
    cd bc-emli-pin-mgmt-etl
    ```
 
 3. Install the required Python packages using pip:
-   ```bash
+   ```
    pip install -r requirements.txt
    ```
 
 ## Usage
 To run the BC PVS ETL Job, use the following command:
 
-```bash
+```
 python etl_job.py [OPTIONS]
 ```
 
