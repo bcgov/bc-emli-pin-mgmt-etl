@@ -39,13 +39,14 @@ Before running the BC PVS ETL Job, ensure you have the following prerequisites i
 3. Install the required Python packages using pip:
    ```bash
    pip install -r requirements.txt
+   ```
 
 ## Usage
 To run the BC PVS ETL Job, use the following command:
 
 ```bash
-   python etl_job.py [OPTIONS]
-
+python etl_job.py [OPTIONS]
+```
 
 Replace `[OPTIONS]` with the necessary command-line arguments based on your specific configuration. See the Configuration section below for details on available options.
 
