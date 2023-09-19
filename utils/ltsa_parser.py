@@ -132,9 +132,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         inplace=True,
     )
 
-    title_df.to_csv(output_directory + "raw_title_data.csv", index=False)
+    title_df.to_csv(output_directory + "title_raw.csv", index=False)
     print(
-        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'raw_title_data.csv'}"
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'title_raw.csv'}"
     )
 
     # 2_parcel.csv
@@ -154,9 +154,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         columns={"PRMNNT_PRCL_ID": "pid", "PRCL_STTS_CD": "parcel_status"}
     )
 
-    parcel_df.to_csv(output_directory + "raw_parcel_data.csv", index=False)
+    parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
     print(
-        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'raw_parcel_data.csv'}"
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'parcel_raw.csv'}"
     )
 
     # 3_titleparcel.csv
@@ -180,9 +180,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         }
     )
 
-    title_parcel_df.to_csv(output_directory + "raw_titleparcel_data.csv", index=False)
+    title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
     print(
-        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'raw_titleparcel_data.csv'}"
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'titleparcel_raw.csv'}"
     )
 
     # 4_titleowner.csv
@@ -247,9 +247,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         }
     )
 
-    title_owner_df.to_csv(output_directory + "raw_titleowner_data.csv", index=False)
+    title_owner_df.to_csv(output_directory + "titleowner_raw.csv", index=False)
     print(
-        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'raw_titleowner_data.csv'}"
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'titleowner_raw.csv'}"
     )
 
     # Join dataframes
