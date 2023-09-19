@@ -134,7 +134,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
 
     title_df.to_csv(output_directory + "raw_title_data.csv", index=False)
     print(
-        f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'raw_title_data.csv'}"
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'raw_title_data.csv'}"
     )
 
     # 2_parcel.csv
@@ -156,7 +156,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
 
     parcel_df.to_csv(output_directory + "raw_parcel_data.csv", index=False)
     print(
-        f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'raw_parcel_data.csv'}"
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'raw_parcel_data.csv'}"
     )
 
     # 3_titleparcel.csv
@@ -182,7 +182,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
 
     title_parcel_df.to_csv(output_directory + "raw_titleparcel_data.csv", index=False)
     print(
-        f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'raw_titleparcel_data.csv'}"
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'raw_titleparcel_data.csv'}"
     )
 
     # 4_titleowner.csv
@@ -249,7 +249,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
 
     title_owner_df.to_csv(output_directory + "raw_titleowner_data.csv", index=False)
     print(
-        f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'raw_titleowner_data.csv'}"
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'raw_titleowner_data.csv'}"
     )
 
     # Join dataframes
