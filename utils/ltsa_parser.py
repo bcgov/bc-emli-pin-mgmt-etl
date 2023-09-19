@@ -84,9 +84,7 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
 
     print(f"CLEANING RULES APPLIED TO FILE:----------------active_pin.csv")
 
-    active_pin_df = active_pin_df.drop(
-        columns=["occupation", "province_long", "PRCL_STTS_CD"]
-    )
+    active_pin_df = active_pin_df.drop(columns=["occupation", "parcel_status"])
 
     active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
 
@@ -96,7 +94,7 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
 
 
 def parse_ltsa_files(input_directory, output_directory, data_rules_url):
-    # Read and process CSV files
+    # Read, process, and write CSV files
 
     # 1_title.csv
     title_df = (
@@ -123,6 +121,22 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
     print("READ FILE----------------1_title.csv")
 
+    title_df.rename(
+        columns={
+            "TITLE_NMBR": "title_number",
+            "LTB_DISTRICT_CD": "land_title_district",
+            "TTL_STTS_CD": "title_status",
+            "FRM_TTL_NMBR": "from_title_number",
+            "FRM_LT_DISTRICT_CD": "from_land_title_district",
+        },
+        inplace=True,
+    )
+
+    title_df.to_csv(output_directory + "title_raw.csv", index=False)
+    print(
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'title_raw.csv'}"
+    )
+
     # 2_parcel.csv
     parcel_df = (
         pd.read_csv(
@@ -136,6 +150,15 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
     print("READ FILE----------------2_parcel.csv")
 
+    parcel_df = parcel_df.rename(
+        columns={"PRMNNT_PRCL_ID": "pid", "PRCL_STTS_CD": "parcel_status"}
+    )
+
+    parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
+    print(
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'parcel_raw.csv'}"
+    )
+
     # 3_titleparcel.csv
     title_parcel_df = (
         pd.read_csv(
@@ -148,6 +171,19 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .replace(np.nan, None)
     )
     print("READ FILE----------------3_titleparcel.csv")
+
+    title_parcel_df = title_parcel_df.rename(
+        columns={
+            "TITLE_NMBR": "title_number",
+            "LTB_DISTRICT_CD": "land_title_district",
+            "PRMNNT_PRCL_ID": "pid",
+        }
+    )
+
+    title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
+    print(
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'titleparcel_raw.csv'}"
+    )
 
     # 4_titleowner.csv
     title_owner_df = (
@@ -174,6 +210,8 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
                 "LTB_DISTRICT_CD": str,
                 "CLIENT_GVN_NM": str,
                 "CLIENT_LST_NM_1": str,
+                "CLIENT_LST_NM_2": str,
+                "OCCPTN_DESC": str,
                 "INCRPRTN_NMBR": str,
                 "ADDRS_DESC_1": str,
                 "ADDRS_DESC_2": str,
@@ -190,52 +228,10 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
     print("READ FILE----------------4_titleowner.csv")
 
-    # Join dataframes
-    title_titleowner_df = pd.merge(
-        title_owner_df, title_df, on=["TITLE_NMBR", "LTB_DISTRICT_CD"]
-    )
-    print("DATAFRAMES MERGED----------------title_owner_df, title_df")
-    print(f"NUMBER OF ROWS IN title_titleowner_df: {len(title_titleowner_df)}")
-
-    titleparcel_parcel_df = pd.merge(title_parcel_df, parcel_df, on="PRMNNT_PRCL_ID")
-    print("DATAFRAMES MERGED----------------title_parcel_df AND parcel_df")
-    print(f"NUMBER OF ROWS IN titleparcel_parcel_df: {len(titleparcel_parcel_df)}")
-
-    active_pin_df = pd.merge(
-        title_titleowner_df, titleparcel_parcel_df, on=["TITLE_NMBR", "LTB_DISTRICT_CD"]
-    )
-    print("DATAFRAMES MERGED----------------title_titleowner_df, titleparcel_parcel_df")
-    print(f"NUMBER OF ROWS IN active_pin_df: {len(active_pin_df)}")
-
-    # Group by title number to get a list of active pids associated with each title
-    titlenumber_pids_df = (
-        active_pin_df.groupby(["TITLE_NMBR", "LTB_DISTRICT_CD"])["PRMNNT_PRCL_ID"]
-        .apply(list)
-        .reset_index(name="pids")
-    )
-    print("GROUPED DATAFRAME CREATED----------------titlenumber_pids_df")
-
-    # Format PIDs as strings
-    titlenumber_pids_df["pids"] = titlenumber_pids_df["pids"].apply(pid_parser)
-
-    # Merge dataframes to add in PIDs column and drop duplicate rows
-    active_pin_df = pd.merge(
-        active_pin_df, titlenumber_pids_df, on=["TITLE_NMBR", "LTB_DISTRICT_CD"]
-    ).drop(columns=["PRMNNT_PRCL_ID"])
-    print("DATAFRAMES MERGED----------------active_pin_df, titlenumber_pids_df")
-
-    # Remove duplicate rows
-    active_pin_df = active_pin_df.loc[active_pin_df.astype(str).drop_duplicates().index]
-    print("DUPLICATE ROWS DROPPED----------------active_pin_df")
-
-    # Rename dataframe columns
-    active_pin_df = active_pin_df.rename(
+    title_owner_df = title_owner_df.rename(
         columns={
             "TITLE_NMBR": "title_number",
             "LTB_DISTRICT_CD": "land_title_district",
-            "TTL_STTS_CD": "title_status",
-            "FRM_TTL_NMBR": "from_title_number",
-            "FRM_LT_DISTRICT_CD": "from_land_title_district",
             "CLIENT_GVN_NM": "given_name",
             "CLIENT_LST_NM_1": "last_name_1",
             "CLIENT_LST_NM_2": "last_name_2",
@@ -250,19 +246,53 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             "ADDRS_PSTL_CD": "postal_code",
         }
     )
-    print("DATAFRAME COLUMNS RENAMED----------------active_pin_df")
+
+    title_owner_df.to_csv(output_directory + "titleowner_raw.csv", index=False)
+    print(
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'titleowner_raw.csv'}"
+    )
+
+    # Join dataframes
+    title_titleowner_df = pd.merge(
+        title_owner_df, title_df, on=["title_number", "land_title_district"]
+    )
+    print("DATAFRAMES MERGED----------------title_owner_df, title_df")
+    print(f"NUMBER OF ROWS IN title_titleowner_df: {len(title_titleowner_df)}")
+
+    titleparcel_parcel_df = pd.merge(title_parcel_df, parcel_df, on="pid")
+    print("DATAFRAMES MERGED----------------title_parcel_df AND parcel_df")
+    print(f"NUMBER OF ROWS IN titleparcel_parcel_df: {len(titleparcel_parcel_df)}")
+
+    active_pin_df = pd.merge(
+        title_titleowner_df,
+        titleparcel_parcel_df,
+        on=["title_number", "land_title_district"],
+    )
+    print("DATAFRAMES MERGED----------------title_titleowner_df, titleparcel_parcel_df")
+    print(f"NUMBER OF ROWS IN active_pin_df: {len(active_pin_df)}")
+
+    # Group by title number to get a list of active pids associated with each title
+    titlenumber_pids_df = (
+        active_pin_df.groupby(["title_number", "land_title_district"])["pid"]
+        .apply(list)
+        .reset_index(name="pids")
+    )
+    print("GROUPED DATAFRAME CREATED----------------titlenumber_pids_df")
+
+    # Format PIDs as strings
+    titlenumber_pids_df["pids"] = titlenumber_pids_df["pids"].apply(pid_parser)
+
+    # Merge dataframes to add in PIDs column and drop duplicate rows
+    active_pin_df = pd.merge(
+        active_pin_df, titlenumber_pids_df, on=["title_number", "land_title_district"]
+    ).drop(columns=["pid"])
+    print("DATAFRAMES MERGED----------------active_pin_df, titlenumber_pids_df")
+
+    # Remove duplicate rows
+    active_pin_df = active_pin_df.loc[active_pin_df.astype(str).drop_duplicates().index]
+    print("DUPLICATE ROWS DROPPED----------------active_pin_df")
 
     clean_active_pin_df(active_pin_df, output_directory, data_rules_url)
-
-    active_pin_df = active_pin_df.drop(
-        columns=["occupation", "province_long", "PRCL_STTS_CD"]
-    )
-
-    # Write to output file
-    active_pin_df.to_csv(output_directory + "raw_ltsa_data.csv", index=False)
-    print(
-        f"WROTE PROCESSED LTSA DATA TO FILE:----------------{output_directory+'raw_ltsa_data.csv'}"
-    )
 
 
 def run(input_directory, output_directory, data_rules_url):
