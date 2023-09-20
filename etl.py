@@ -151,13 +151,13 @@ def main():
     parser.add_argument(
         "--log_folder",
         type=str,
-        default="./data/log/"
+        default="./data/log/",
         help="Folder where the log file should be created.",
     )
 
     args = parser.parse_args()
     log_filename = f"etl_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-    
+
     try:
         # Set up logging with the specified log folder and filename
         setup_logging(args.log_folder, log_filename)
