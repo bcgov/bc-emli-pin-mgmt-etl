@@ -143,9 +143,7 @@ def main():
     )
 
     # Add command-line arguments for PIN Expiration
-    parser.add_argument(
-        "--expire_api_url", type=str, help="The Expire PIN API url"
-    )
+    parser.add_argument("--expire_api_url", type=str, help="The Expire PIN API url")
 
     args = parser.parse_args()
 
