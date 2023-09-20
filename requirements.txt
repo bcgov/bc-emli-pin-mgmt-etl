@@ -1,6 +1,5 @@
 paramiko
 pandas
-psycopg2
 sqlalchemy
 notifications_python_client
 requests
