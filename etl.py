@@ -203,15 +203,15 @@ def main():
         }
 
         # Send an email with the log file attachment regardless of success or error
-        send_email_notification(
-            args.api_key,
-            args.base_url,
-            args.email_address,
-            args.template_id,
-            log_filename,
-            personalisation["job_status"],
-            personalisation.get("error_message"),
-        )
+        # send_email_notification(
+        #     args.api_key,
+        #     args.base_url,
+        #     args.email_address,
+        #     args.template_id,
+        #     log_filename,
+        #     personalisation["job_status"],
+        #     personalisation.get("error_message"),
+        # )
 
 
 if __name__ == "__main__":
