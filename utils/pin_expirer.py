@@ -38,7 +38,7 @@ def create_expiration_file(input_directory, output_directory):
     )
 
 
-def expire_pins(expired_titles_df, engine):
+def expire_pins(expired_titles_df, engine, expire_api_url):
     # Need to find live_pin_id of title
     query = "SELECT live_pin_id, title_number FROM active_pin"
     active_pin_df = pd.read_sql(query, engine)
@@ -58,7 +58,7 @@ def expire_pins(expired_titles_df, engine):
             "livePinId": live_pin_id,
             "expirationReason": "CO",
         }
-        response = requests.post(url="http://localhost:3000/pins/expire", json=data)
+        response = requests.post(url=expire_api_url, json=data)
         print(response.text)
 
     print(f"EXPIRED PINS OF CANCELLED TITLES")
@@ -67,6 +67,7 @@ def expire_pins(expired_titles_df, engine):
 def run(
     input_directory,
     output_directory,
+    expire_api_url,
     database_name="postgres",
     host="localhost",
     port=53173,
@@ -83,13 +84,10 @@ def run(
 
         file_name = "expired_titles.csv"
         file_path = os.path.join(expiration_file_directory, file_name)
-        df = pd.read_csv(file_path)  # Adjust for different file formats
-
-        print(f"file_path: {file_path}")
-        print(df)
+        df = pd.read_csv(file_path)
 
         # Call expire pin API for each title in dataframe
-        expire_pins(df, engine)
+        expire_pins(df, engine, expire_api_url)
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")

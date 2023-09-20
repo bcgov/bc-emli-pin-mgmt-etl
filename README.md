@@ -75,6 +75,7 @@ The BC PVS ETL Job supports various configuration options through command-line a
 --base_url: The base URL of the GC Notify API.
 --email_address: The recipient's email address for notifications.
 --template_id: The ID of the email template to use for notifications.
+--expire_api_url: The URL of the Expire PIN API endpoint.
 ```
 
 Please ensure you have the necessary credentials and configurations for the LTSA SFTP server, PostgreSQL database, and GC Notify to successfully run the ETL job.
