@@ -47,7 +47,7 @@ Before running the BC PVS ETL Job, ensure you have the following prerequisites i
 To run the BC PVS ETL Job, use the following command:
 
 ```
-python etl_job.py [OPTIONS]
+python etl.py [OPTIONS]
 ```
 
 Replace `[OPTIONS]` with the necessary command-line arguments based on your specific configuration. See the Configuration section below for details on available options.
