@@ -7,17 +7,22 @@ from utils import ltsa_parser, sftp_downloader, postgres_writer, pin_expirer
 from utils.gc_notify import gc_notify_log
 
 
-def setup_logging(log_filename):
+def setup_logging(log_folder, log_filename):
     """
     Set up logging to redirect stdout and stderr to log files.
 
     Args:
+        log_folder (str): The folder where the log file should be created.
         log_filename (str): The name of the log file.
 
     Returns:
         None
     """
-    logging.basicConfig(filename=log_filename, level=logging.INFO)
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+
+    log_path = os.path.join(log_folder, log_filename)
+    logging.basicConfig(filename=log_path, level=logging.INFO)
     stdout_logger = logging.getLogger("STDOUT")
     stderr_logger = logging.getLogger("STDERR")
 
@@ -36,6 +41,7 @@ def send_email_notification(
     base_url,
     email_address,
     template_id,
+    log_folder,
     log_filename,
     status,
     error_message=None,
@@ -48,7 +54,8 @@ def send_email_notification(
         base_url (str): The base URL of the GC Notify API.
         email_address (str): The recipient's email address.
         template_id (str): The ID of the email template to use.
-        log_filename (str): The path to the log file to attach.
+        log_folder (str): The folder where the log file is located.
+        log_filename (str): The name of the log file.
         status (str): The status of the job (e.g., "Success" or "Failure").
         error_message (str): The error message (if applicable).
 
@@ -56,8 +63,9 @@ def send_email_notification(
         None
     """
     try:
+        log_path = os.path.join(log_folder, log_filename)
         personalisation = {
-            "log_filename": os.path.basename(log_filename),
+            "log_filename": log_filename,
             "job_status": status,
             "error_message": error_message,
         }
@@ -67,7 +75,7 @@ def send_email_notification(
             base_url,
             email_address,
             template_id,
-            log_filename,
+            log_path,
             personalisation,
         )
 
@@ -76,9 +84,6 @@ def send_email_notification(
 
 
 def main():
-    log_filename = f"etl_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-    setup_logging(log_filename)
-
     parser = argparse.ArgumentParser(
         prog="BC PVS ETL Job",
         description="This is the ETL job that expires PINS.",
@@ -144,10 +149,22 @@ def main():
 
     # Add command-line arguments for PIN Expiration
     parser.add_argument("--expire_api_url", type=str, help="The Expire PIN API url")
+    
+    # Add a new command-line argument for log folder
+    parser.add_argument(
+        "--log_folder",
+        type=str,
+        default="./data/log/",
+        help="Folder where the log file should be created.",
+    )
 
     args = parser.parse_args()
+    log_filename = f"etl_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 
     try:
+        # Set up logging with the specified log folder and filename
+        setup_logging(args.log_folder, log_filename)
+
         # Step 1: Download the SFTP files to the PVC
         sftp_downloader.run(
             host=args.sftp_host,
@@ -201,15 +218,15 @@ def main():
         }
 
         # Send an email with the log file attachment regardless of success or error
-        send_email_notification(
-            args.api_key,
-            args.base_url,
-            args.email_address,
-            args.template_id,
-            log_filename,
-            personalisation["job_status"],
-            personalisation.get("error_message"),
-        )
+        # send_email_notification(
+        #     args.api_key,
+        #     args.base_url,
+        #     args.email_address,
+        #     args.template_id,
+        #     log_filename,
+        #     personalisation["job_status"],
+        #     personalisation.get("error_message"),
+        # )
 
 
 if __name__ == "__main__":
