@@ -93,9 +93,3 @@ def run(
 
 
 # Add if name = main
-
-run(
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-    "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
-    "http://localhost:3000/pins/expire",
-)
