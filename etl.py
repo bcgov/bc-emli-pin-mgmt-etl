@@ -149,7 +149,7 @@ def main():
 
     # Add command-line arguments for PIN Expiration
     parser.add_argument("--expire_api_url", type=str, help="The Expire PIN API url")
-    
+
     # Add a new command-line argument for log folder
     parser.add_argument(
         "--log_folder",
