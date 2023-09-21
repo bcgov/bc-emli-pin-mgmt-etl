@@ -2,6 +2,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 import requests
 import time
+from datetime import datetime
 
 
 def create_expiration_file(input_directory):
@@ -33,9 +34,6 @@ def create_expiration_file(input_directory):
     return expired_titles_df
 
 
-# create separate folder within output script
-
-
 def expire_pins(expired_titles_df, engine, expire_api_url):
     # Find live_pin_id of title
     title_number_string = (
@@ -56,7 +54,9 @@ def expire_pins(expired_titles_df, engine, expire_api_url):
 
     total_pins_expired = len(expired_rows_df["live_pin_id"])
 
-    print(f"Expired PINs of cancelled titles, {total_pins_expired} pins expired")
+    print(
+        f"Expired PINs of cancelled titles, {total_pins_expired} pins expired, timestamp: {datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    )
 
 
 def run(
