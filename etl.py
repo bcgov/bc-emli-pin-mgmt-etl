@@ -32,8 +32,8 @@ def setup_logging(log_folder, log_filename):
     stdout_logger.addHandler(stdout_handler)
     stderr_logger.addHandler(stderr_handler)
 
-    sys.stdout = stdout_logger
-    sys.stderr = stderr_logger
+    # sys.stdout = stdout_logger
+    # sys.stderr = stderr_logger
 
 
 def send_email_notification(
