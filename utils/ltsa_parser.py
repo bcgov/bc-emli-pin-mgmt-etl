@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import numpy as np
 import requests
+import os
 
 
 def pid_parser(pids):
@@ -85,6 +86,9 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
     print(f"CLEANING RULES APPLIED TO FILE:----------------active_pin.csv")
 
     active_pin_df = active_pin_df.drop(columns=["occupation", "parcel_status"])
+
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
 
     active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
 

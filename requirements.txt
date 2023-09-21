@@ -3,4 +3,5 @@ pandas
 sqlalchemy
 notifications_python_client
 requests
+os
 psycopg2

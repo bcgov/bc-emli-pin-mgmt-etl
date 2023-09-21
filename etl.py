@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 from datetime import datetime
-from utils import ltsa_parser, sftp_downloader, postgres_writer
+from utils import ltsa_parser, sftp_downloader, postgres_writer, pin_expirer
 from utils.gc_notify import gc_notify_log
 
 
@@ -147,6 +147,9 @@ def main():
         "--template_id", type=str, help="The ID of the email template to use."
     )
 
+    # Add command-line arguments for PIN Expiration
+    parser.add_argument("--expire_api_url", type=str, help="The Expire PIN API url")
+
     # Add a new command-line argument for log folder
     parser.add_argument(
         "--log_folder",
@@ -184,6 +187,18 @@ def main():
             input_directory=args.processed_data_path,
             database_name=args.db_name,
             batch_size=args.db_write_batch_size,
+            host=args.db_host,
+            port=args.db_port,
+            user=args.db_username,
+            password=args.db_password,
+        )
+
+        # Step 4: Expire PINs of cancelled titles
+        pin_expirer.run(
+            input_directory=args.sftp_local_path,
+            output_directory=args.processed_data_path,
+            expire_api_url=args.expire_api_url,
+            database_name=args.db_name,
             host=args.db_host,
             port=args.db_port,
             user=args.db_username,
