@@ -1,6 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 import time
+import psycopg2
 
 
 def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
