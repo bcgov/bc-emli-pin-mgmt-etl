@@ -4,3 +4,4 @@ psycopg2
 sqlalchemy
 notifications_python_client
 requests
+psycopg2
