@@ -1,10 +1,10 @@
 import pandas as pd
-import os
 from sqlalchemy import create_engine
 import requests
+import time
 
 
-def create_expiration_file(input_directory, output_directory):
+def create_expiration_file(input_directory):
     # Read 1_title.csv
     title_df = pd.read_csv(
         input_directory + "1_title.csv",
@@ -30,15 +30,10 @@ def create_expiration_file(input_directory, output_directory):
     # Drop active titles
     expired_titles_df = title_df.drop(title_df[title_df["title_status"] != "C"].index)
 
-    # Write inactive titles to csv
-    expired_titles_df.to_csv(output_directory + "expired_titles.csv", index=False)
-    print(
-        f"WROTE CANCELLED TITLES TO FILE:----------------{output_directory+'expired_titles.csv'}"
-    )
+    return expired_titles_df
 
 
 # create separate folder within output script
-# add time function
 
 
 def expire_pins(expired_titles_df, engine, expire_api_url):
@@ -57,39 +52,59 @@ def expire_pins(expired_titles_df, engine, expire_api_url):
             "livePinId": live_pin_id,
             "expirationReason": "CO",
         }
-        response = requests.post(url=expire_api_url, json=data)
-        print(response.text)
+        requests.post(url=expire_api_url, json=data)
 
-    print(f"EXPIRED PINS OF CANCELLED TITLES")
+    total_pins_expired = len(expired_rows_df["live_pin_id"])
+
+    print(f"Expired PINs of cancelled titles, {total_pins_expired} pins expired")
 
 
 def run(
     input_directory,
-    output_directory,
     expire_api_url,
-    database_name="postgres",
-    host="localhost",
-    port=53173,
-    user="postgres",
-    password="bcpassword",
+    database_name,
+    host,
+    port,
+    user,
+    password,
 ):
     try:
-        create_expiration_file(input_directory, output_directory)
-        expiration_file_directory = output_directory
+        df = create_expiration_file(input_directory)
 
         # Create a connection to the PostgreSQL database
         conn_str = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
         engine = create_engine(conn_str)
 
-        file_name = "expired_titles.csv"
-        file_path = os.path.join(expiration_file_directory, file_name)
-        df = pd.read_csv(file_path)
+        start_time = time.time()  # Start measuring time
 
         # Call expire pin API for each title in dataframe
         expire_pins(df, engine, expire_api_url)
+
+        elapsed_time = time.time() - start_time
+
+        print(f"Elapsed Time: {elapsed_time:.2f} seconds")
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")
 
 
-# Add if name = main
+if __name__ == "__main__":
+    # Replace these placeholders with your actual values
+    input_directory = "your_input_directory"  # Replace with your input directory path
+    expire_api_url = "your_expire_api_url"  # Replace with your local expire api url
+    database_name = "postgres"  # Replace with your database name
+    host = "localhost"  # Replace with your host
+    port = 53173  # Replace with your port
+    user = "your_username"  # Replace with your username
+    password = "your_password"  # Replace with your password
+
+    # Call the run function with the specified parameters
+    run(
+        input_directory,
+        expire_api_url,
+        database_name,
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+    )
