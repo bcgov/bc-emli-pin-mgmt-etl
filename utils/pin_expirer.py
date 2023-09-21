@@ -32,27 +32,26 @@ def create_expiration_file(input_directory, output_directory):
 
     # Write inactive titles to csv
     expired_titles_df.to_csv(output_directory + "expired_titles.csv", index=False)
-    print(expired_titles_df)
     print(
         f"WROTE CANCELLED TITLES TO FILE:----------------{output_directory+'expired_titles.csv'}"
     )
 
 
+# create separate folder within output script
+# add time function
+
+
 def expire_pins(expired_titles_df, engine, expire_api_url):
-    # Need to find live_pin_id of title
-    query = "SELECT live_pin_id, title_number FROM active_pin"
-    active_pin_df = pd.read_sql(query, engine)
-
-    expired_titles_df = expired_titles_df.merge(active_pin_df, on="title_number")
-
-    # Remove duplicate rows
-    expired_titles_df = expired_titles_df.loc[
-        expired_titles_df.astype(str).drop_duplicates().index
-    ]
-    print(f"expired_titles_df: {expired_titles_df}")
+    # Find live_pin_id of title
+    title_number_string = (
+        str(list(expired_titles_df["title_number"])).replace("[", "(").replace("]", ")")
+    )
+    query = f"SELECT live_pin_id, title_number FROM active_pin WHERE title_number IN {title_number_string}"
+    expired_rows_df = pd.read_sql(query, engine)
 
     # Call expire pin api for each title in expired_titles.csv
-    for live_pin_id in expired_titles_df["live_pin_id"]:
+    for live_pin_id in expired_rows_df["live_pin_id"]:
+        print(live_pin_id)
         live_pin_id = str(live_pin_id)
         data = {
             "livePinId": live_pin_id,
@@ -93,7 +92,10 @@ def run(
         print(f"An error occurred: {str(e)}")
 
 
+# Add if name = main
+
 run(
     "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
     "/Users/emendelson/Downloads/export/EMLI_UPDATE_20230824/EMLI_UPDATE_20230824/",
+    "http://localhost:3000/pins/expire",
 )
