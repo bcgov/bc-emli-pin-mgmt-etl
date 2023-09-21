@@ -17,7 +17,7 @@ def create_expiration_file(input_directory):
             "TITLE_NMBR": str,
             "TTL_STTS_CD": str,
         },
-    ).applymap(lambda x: x.strip() if isinstance(x, str) else x)
+    ).map(lambda x: x.strip() if isinstance(x, str) else x)
     print("READ FILE----------------1_title.csv")
 
     title_df.rename(
