@@ -90,9 +90,6 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
 
     active_pin_df = active_pin_df.drop(columns=["occupation", "parcel_status"])
 
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
-
     active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
 
     data_cleaning_elapsed_time = time.time() - data_cleaning_start_time
@@ -316,6 +313,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
 
 def run(input_directory, output_directory, data_rules_url):
     start_time = time.time()
+
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
 
     # Parse the files
     parse_ltsa_files(input_directory, output_directory, data_rules_url)
