@@ -35,12 +35,16 @@ def create_expiration_file(input_directory):
 
 
 def expire_pins(expired_titles_df, engine, expire_api_url):
-    # Find live_pin_id of title
-    title_number_string = (
-        str(list(expired_titles_df["title_number"])).replace("[", "(").replace("]", ")")
-    )
-    query = f"SELECT live_pin_id, title_number FROM active_pin WHERE title_number IN {title_number_string}"
-    expired_rows_df = pd.read_sql(query, engine)
+    expired_title_list = list(expired_titles_df["title_number"])
+
+    # Check if there are any cancelled titles
+    if len(expired_title_list) > 0:
+        title_number_string = (
+            str(expired_title_list).replace("[", "(").replace("]", ")")
+        )
+        # Find live_pin_id for each cancelled title
+        query = f"SELECT live_pin_id, title_number FROM active_pin WHERE title_number IN {title_number_string}"
+        expired_rows_df = pd.read_sql(query, engine)
 
     # Call expire pin api for each title in expired_titles.csv
     for live_pin_id in expired_rows_df["live_pin_id"]:
