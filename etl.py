@@ -3,17 +3,18 @@ import logging
 import os
 import sys
 from datetime import datetime
-from utils import ltsa_parser, sftp_downloader, postgres_writer
+from utils import ltsa_parser, sftp_downloader, postgres_writer, pin_expirer
 from utils.gc_notify import gc_notify_log
 
 
-def setup_logging(log_folder, log_filename):
+def setup_logging(log_folder, log_filename, logger_name):
     """
-    Set up logging to redirect stdout and stderr to log files.
+    Set up logging to write log messages to a file using a custom logger.
 
     Args:
         log_folder (str): The folder where the log file should be created.
         log_filename (str): The name of the log file.
+        logger_name (str): The name of the custom logger.
 
     Returns:
         None
@@ -22,18 +23,16 @@ def setup_logging(log_folder, log_filename):
         os.makedirs(log_folder)
 
     log_path = os.path.join(log_folder, log_filename)
-    logging.basicConfig(filename=log_path, level=logging.INFO)
-    stdout_logger = logging.getLogger("STDOUT")
-    stderr_logger = logging.getLogger("STDERR")
 
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    stderr_handler = logging.StreamHandler(sys.stderr)
+    # Create a custom logger with the specified name
+    logger = logging.getLogger(logger_name)
 
-    stdout_logger.addHandler(stdout_handler)
-    stderr_logger.addHandler(stderr_handler)
-
-    # sys.stdout = stdout_logger
-    # sys.stderr = stderr_logger
+    # Configure the logger to write log messages to a file
+    logger.setLevel(logging.INFO)
+    file_handler = logging.FileHandler(log_path)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
 
 def send_email_notification(
@@ -147,6 +146,9 @@ def main():
         "--template_id", type=str, help="The ID of the email template to use."
     )
 
+    # Add command-line arguments for PIN Expiration
+    parser.add_argument("--expire_api_url", type=str, help="The Expire PIN API url")
+
     # Add a new command-line argument for log folder
     parser.add_argument(
         "--log_folder",
@@ -160,7 +162,7 @@ def main():
 
     try:
         # Set up logging with the specified log folder and filename
-        setup_logging(args.log_folder, log_filename)
+        setup_logging(args.log_folder, log_filename, "ETL")
 
         # Step 1: Download the SFTP files to the PVC
         sftp_downloader.run(
@@ -190,6 +192,18 @@ def main():
             password=args.db_password,
         )
 
+        # # Step 4: Expire PINs of cancelled titles
+        # pin_expirer.run(
+        #     input_directory=args.sftp_local_path,
+        #     output_directory=args.processed_data_path,
+        #     expire_api_url=args.expire_api_url,
+        #     database_name=args.db_name,
+        #     host=args.db_host,
+        #     port=args.db_port,
+        #     user=args.db_username,
+        #     password=args.db_password,
+        # )
+
         logging.info("ETL job completed successfully")
 
     except Exception as e:
@@ -201,6 +215,8 @@ def main():
             "job_status": "Success" if "e" not in locals() else "Failure",
             "error_message": str(e) if "e" in locals() else None,
         }
+
+        logging.info(personalisation)
 
         # Send an email with the log file attachment regardless of success or error
         # send_email_notification(
