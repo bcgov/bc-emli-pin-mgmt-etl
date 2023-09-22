@@ -32,6 +32,8 @@ def gc_notify_log(
             file_data = f.read()
             encoded_file = base64.b64encode(file_data).decode("utf-8")
 
+        print(encoded_file)
+
         # Create a dictionary for the file attachment
         file_attachment = {
             "file": encoded_file,
@@ -42,6 +44,8 @@ def gc_notify_log(
         # Add the file attachment to personalisation data
         personalisation["link_to_file"] = file_attachment
 
+        print(personalisation)
+
         # Send the email notification
         response = notifications_client.send_email_notification(
             email_address=email_address,
@@ -49,6 +53,7 @@ def gc_notify_log(
             personalisation=personalisation,
         )
 
+        print(response)
         return response
 
     except Exception as e:
