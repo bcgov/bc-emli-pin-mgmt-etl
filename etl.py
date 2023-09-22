@@ -85,11 +85,13 @@ def main():
         "--sftp_local_path",
         type=str,
         help="Local folder path to download the files to.",
+        default="/data/",
     )
     parser.add_argument(
         "--processed_data_path",
         type=str,
         help="Local output folder for the processed csv files.",
+        default="/data/output/",
     )
     parser.add_argument("--db_host", type=str, help="Host name of the PostgresDB.")
     parser.add_argument(
@@ -143,22 +145,22 @@ def main():
         setup_logging(args.log_folder, log_filename)
         logger = logging.getLogger(__name__)
 
-        # # Step 1: Download the SFTP files to the PVC
-        # sftp_downloader.run(
-        #     host=args.sftp_host,
-        #     port=args.sftp_port,
-        #     username=args.sftp_username,
-        #     password=args.sftp_password,
-        #     remote_path=args.sftp_remote_path,
-        #     local_path=args.sftp_local_path,
-        # )
+        # Step 1: Download the SFTP files to the PVC
+        sftp_downloader.run(
+            host=args.sftp_host,
+            port=args.sftp_port,
+            username=args.sftp_username,
+            password=args.sftp_password,
+            remote_path=args.sftp_remote_path,
+            local_path=args.sftp_local_path,
+        )
 
         # Step 2: Process the downloaded SFTP files and write to the output folder
-        # ltsa_parser.run(
-        #     input_directory=args.sftp_local_path,
-        #     output_directory=args.processed_data_path,
-        #     data_rules_url=args.data_rules_url,
-        # )
+        ltsa_parser.run(
+            input_directory=args.sftp_local_path,
+            output_directory=args.processed_data_path,
+            data_rules_url=args.data_rules_url,
+        )
 
         # Step 3: Write the above processed data to the PostgreSQL database
         postgres_writer.run(
@@ -171,17 +173,16 @@ def main():
             password=args.db_password,
         )
 
-        # # Step 4: Expire PINs of cancelled titles
-        # pin_expirer.run(
-        #     input_directory=args.sftp_local_path,
-        #     output_directory=args.processed_data_path,
-        #     expire_api_url=args.expire_api_url,
-        #     database_name=args.db_name,
-        #     host=args.db_host,
-        #     port=args.db_port,
-        #     user=args.db_username,
-        #     password=args.db_password,
-        # )
+        # Step 4: Expire PINs of cancelled titles
+        pin_expirer.run(
+            input_directory=args.sftp_local_path,
+            expire_api_url=args.expire_api_url,
+            database_name=args.db_name,
+            host=args.db_host,
+            port=args.db_port,
+            user=args.db_username,
+            password=args.db_password,
+        )
 
         logger.info("ETL job completed successfully")
 
@@ -189,10 +190,13 @@ def main():
         logger.info(f"An error occurred: {str(e)}")
 
     finally:
+        # change name to job_status
+        # change value to error_message
+        # after creating template with these values
         personalisation = {
             "log_filename": os.path.basename(log_filename),
-            "job_status": "Success" if "e" not in locals() else "Failure",
-            "error_message": str(e) if "e" in locals() else None,
+            "name": "Success" if "e" not in locals() else "Failure",
+            "value": str(e) if "e" in locals() else None,
         }
 
         logger.info(personalisation)
@@ -204,8 +208,8 @@ def main():
         #     args.email_address,
         #     args.template_id,
         #     log_filename,
-        #     personalisation["job_status"],
-        #     personalisation.get("error_message"),
+        #     personalisation["name"],
+        #     personalisation.get("value"),
         # )
 
 
