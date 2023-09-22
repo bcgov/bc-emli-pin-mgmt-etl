@@ -140,8 +140,6 @@ def main():
     args = parser.parse_args()
     log_filename = f"etl_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 
-    print(f"log_filename: {log_filename}")
-
     try:
         # Set up logging with the specified log folder and filename
         setup_logging(args.log_folder, log_filename)
