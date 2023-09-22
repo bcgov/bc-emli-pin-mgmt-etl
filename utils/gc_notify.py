@@ -49,6 +49,7 @@ def gc_notify_log(
             personalisation=personalisation,
         )
 
+        print(response)
         return response
 
     except Exception as e:
