@@ -5,34 +5,7 @@ import sys
 from datetime import datetime
 from utils import ltsa_parser, sftp_downloader, postgres_writer, pin_expirer, pin_expirer
 from utils.gc_notify import gc_notify_log
-
-
-def setup_logging(log_folder, log_filename, logger_name):
-    """
-    Set up logging to write log messages to a file using a custom logger.
-
-    Args:
-        log_folder (str): The folder where the log file should be created.
-        log_filename (str): The name of the log file.
-        logger_name (str): The name of the custom logger.
-
-    Returns:
-        None
-    """
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
-
-    log_path = os.path.join(log_folder, log_filename)
-
-    # Create a custom logger with the specified name
-    logger = logging.getLogger(logger_name)
-
-    # Configure the logger to write log messages to a file
-    logger.setLevel(logging.INFO) 
-    file_handler = logging.FileHandler(log_path)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+from utils.logging_config import setup_logging
 
 
 def send_email_notification(
@@ -79,7 +52,7 @@ def send_email_notification(
         )
 
     except Exception as e:
-        logging.error(f"Error sending email notification: {str(e)}")
+        print(f"Error sending email notification: {str(e)}")
 
 
 def main():
@@ -162,7 +135,8 @@ def main():
 
     try:
         # Set up logging with the specified log folder and filename
-        setup_logging(args.log_folder, log_filename, "ETL")
+        setup_logging(args.log_folder, log_filename)
+        logger = logging.getLogger(__name__)
 
         # # Step 1: Download the SFTP files to the PVC
         # sftp_downloader.run(
@@ -175,11 +149,11 @@ def main():
         # )
 
         # Step 2: Process the downloaded SFTP files and write to the output folder
-        ltsa_parser.run(
-            input_directory=args.sftp_local_path,
-            output_directory=args.processed_data_path,
-            data_rules_url=args.data_rules_url,
-        )
+        # ltsa_parser.run(
+        #     input_directory=args.sftp_local_path,
+        #     output_directory=args.processed_data_path,
+        #     data_rules_url=args.data_rules_url,
+        # )
 
         # Step 3: Write the above processed data to the PostgreSQL database
         postgres_writer.run(
@@ -204,10 +178,10 @@ def main():
         #     password=args.db_password,
         # )
 
-        logging.info("ETL job completed successfully")
+        logger.info("ETL job completed successfully")
 
     except Exception as e:
-        logging.error(f"An error occurred: {str(e)}")
+        logger.info(f"An error occurred: {str(e)}")
 
     finally:
         personalisation = {
@@ -216,7 +190,7 @@ def main():
             "error_message": str(e) if "e" in locals() else None,
         }
 
-        logging.info(personalisation)
+        logger.info(personalisation)
 
         # Send an email with the log file attachment regardless of success or error
         # send_email_notification(
