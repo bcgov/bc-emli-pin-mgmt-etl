@@ -70,3 +70,6 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+# Other files
+local_run.sh
