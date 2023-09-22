@@ -28,4 +28,5 @@ CMD python etl.py \
     --db_port=${db_port} \
     --db_username=${db_username} \
     --db_password=${db_password} \
-    --data_rules_url=${data_rules_url}
+    --data_rules_url=${data_rules_url} \
+    --expire_api_url=${expire_api_url}
