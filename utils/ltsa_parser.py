@@ -26,7 +26,6 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
     data_cleaning_start_time = time.time()
 
     data_cleaning = load_data_cleaning_rules(data_rules_url)
-    
 
     # Apply cleaning rules to each column
     for column, rule in data_cleaning["column_rules"].items():

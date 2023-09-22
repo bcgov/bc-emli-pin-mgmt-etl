@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 
+
 def setup_logging(log_folder, log_filename):
     if not os.path.exists(log_folder):
         os.makedirs(log_folder)
@@ -13,7 +14,7 @@ def setup_logging(log_folder, log_filename):
     logger.setLevel(logging.INFO)
 
     # Configure the formatter
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
     # Create a handler to write log messages to the specified log file
     file_handler = logging.FileHandler(log_path)
@@ -31,11 +32,12 @@ def setup_logging(log_folder, log_filename):
     sys.stdout = LoggerStream(logger, logging.INFO)
     sys.stderr = LoggerStream(logger, logging.ERROR)
 
+
 class LoggerStream:
     def __init__(self, logger, log_level):
         self.logger = logger
         self.log_level = log_level
-        self.linebuf = ''
+        self.linebuf = ""
 
     def write(self, buf):
         for line in buf.rstrip().splitlines():
@@ -43,6 +45,7 @@ class LoggerStream:
 
     def flush(self):
         pass
+
 
 # Example usage:
 if __name__ == "__main__":
