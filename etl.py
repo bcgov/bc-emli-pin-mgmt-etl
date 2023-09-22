@@ -42,9 +42,9 @@ def send_email_notification(
     try:
         log_path = os.path.join(log_folder, log_filename)
         personalisation = {
-            "log_filename": log_filename,
-            "job_status": status,
-            "error_message": error_message,
+            # "log_filename": log_filename,
+            "name": status,
+            "value": error_message,
         }
 
         gc_notify_log(
@@ -148,43 +148,43 @@ def main():
         logger = logging.getLogger(__name__)
 
         # Step 1: Download the SFTP files to the PVC
-        # sftp_downloader.run(
-        #     host=args.sftp_host,
-        #     port=args.sftp_port,
-        #     username=args.sftp_username,
-        #     password=args.sftp_password,
-        #     remote_path=args.sftp_remote_path,
-        #     local_path=args.sftp_local_path,
-        # )
+        sftp_downloader.run(
+            host=args.sftp_host,
+            port=args.sftp_port,
+            username=args.sftp_username,
+            password=args.sftp_password,
+            remote_path=args.sftp_remote_path,
+            local_path=args.sftp_local_path,
+        )
 
         # Step 2: Process the downloaded SFTP files and write to the output folder
-        # ltsa_parser.run(
-        #     input_directory=args.sftp_local_path,
-        #     output_directory=args.processed_data_path,
-        #     data_rules_url=args.data_rules_url,
-        # )
+        ltsa_parser.run(
+            input_directory=args.sftp_local_path,
+            output_directory=args.processed_data_path,
+            data_rules_url=args.data_rules_url,
+        )
 
         # Step 3: Write the above processed data to the PostgreSQL database
-        # postgres_writer.run(
-        #     input_directory=args.processed_data_path,
-        #     database_name=args.db_name,
-        #     batch_size=args.db_write_batch_size,
-        #     host=args.db_host,
-        #     port=args.db_port,
-        #     user=args.db_username,
-        #     password=args.db_password,
-        # )
+        postgres_writer.run(
+            input_directory=args.processed_data_path,
+            database_name=args.db_name,
+            batch_size=args.db_write_batch_size,
+            host=args.db_host,
+            port=args.db_port,
+            user=args.db_username,
+            password=args.db_password,
+        )
 
         # Step 4: Expire PINs of cancelled titles
-        # pin_expirer.run(
-        #     input_directory=args.sftp_local_path,
-        #     expire_api_url=args.expire_api_url,
-        #     database_name=args.db_name,
-        #     host=args.db_host,
-        #     port=args.db_port,
-        #     user=args.db_username,
-        #     password=args.db_password,
-        # )
+        pin_expirer.run(
+            input_directory=args.sftp_local_path,
+            expire_api_url=args.expire_api_url,
+            database_name=args.db_name,
+            host=args.db_host,
+            port=args.db_port,
+            user=args.db_username,
+            password=args.db_password,
+        )
 
         logger.info("ETL job completed successfully")
 
@@ -195,10 +195,14 @@ def main():
         # change name to job_status
         # change value to error_message
         # after creating template with these values
+        # personalisation = {
+        #     "log_filename": os.path.basename(log_filename),
+        #     "name": "Success" if "e" not in locals() else "Failure",
+        #     "value": str(e) if "e" in locals() else None,
+        # }
         personalisation = {
-            "log_filename": os.path.basename(log_filename),
-            "name": "Success" if "e" not in locals() else "Failure",
-            "value": str(e) if "e" in locals() else None,
+            "name": "Amala",
+            "value": "2018-01-01",
         }
 
         logger.info(personalisation)
