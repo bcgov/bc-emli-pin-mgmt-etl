@@ -8,7 +8,6 @@ from utils import (
     sftp_downloader,
     postgres_writer,
     pin_expirer,
-    pin_expirer,
 )
 from utils.gc_notify import gc_notify_log
 from utils.logging_config import setup_logging
