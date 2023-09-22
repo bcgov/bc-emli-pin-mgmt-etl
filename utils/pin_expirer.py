@@ -46,24 +46,29 @@ def expire_pins(expired_titles_df, engine, expire_api_url):
         query = f"SELECT live_pin_id, title_number FROM active_pin WHERE title_number IN {title_number_string}"
         expired_rows_df = pd.read_sql(query, engine)
 
-    # Call expire pin api for each title in expired_titles.csv
-    for live_pin_id in expired_rows_df["live_pin_id"]:
-        try:
-            live_pin_id = str(live_pin_id)
-            data = {
-                "livePinId": live_pin_id,
-                "expirationReason": "CO",
-            }
-            requests.post(url=expire_api_url, json=data)
+        # Call expire pin api for each title in expired_titles.csv
+        for live_pin_id in expired_rows_df["live_pin_id"]:
+            try:
+                live_pin_id = str(live_pin_id)
+                data = {
+                    "livePinId": live_pin_id,
+                    "expirationReason": "CO",
+                }
+                requests.post(url=expire_api_url, json=data)
 
-        except Exception as e:
-            print(f"An error occurred calling Expire PIN API: {str(e)}")
+            except Exception as e:
+                print(f"An error occurred calling Expire PIN API: {str(e)}")
 
-    total_pins_expired = len(expired_rows_df["live_pin_id"])
+        total_pins_expired = len(expired_rows_df["live_pin_id"])
 
-    print(
-        f"Expired PINs of cancelled titles, {total_pins_expired} pins expired, timestamp: {datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    )
+        print(
+            f"Expired PINs of cancelled titles, {total_pins_expired} pins expired, timestamp: {datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
+
+    else:
+        print(
+            f"No PINs to expire, timestamp: {datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
 
 
 def run(
