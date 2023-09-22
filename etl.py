@@ -3,37 +3,14 @@ import logging
 import os
 import sys
 from datetime import datetime
-from utils import ltsa_parser, sftp_downloader, postgres_writer, pin_expirer
+from utils import (
+    ltsa_parser,
+    sftp_downloader,
+    postgres_writer,
+    pin_expirer,
+)
 from utils.gc_notify import gc_notify_log
-
-
-def setup_logging(log_folder, log_filename):
-    """
-    Set up logging to redirect stdout and stderr to log files.
-
-    Args:
-        log_folder (str): The folder where the log file should be created.
-        log_filename (str): The name of the log file.
-
-    Returns:
-        None
-    """
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
-
-    log_path = os.path.join(log_folder, log_filename)
-    logging.basicConfig(filename=log_path, level=logging.INFO)
-    stdout_logger = logging.getLogger("STDOUT")
-    stderr_logger = logging.getLogger("STDERR")
-
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    stderr_handler = logging.StreamHandler(sys.stderr)
-
-    stdout_logger.addHandler(stdout_handler)
-    stderr_logger.addHandler(stderr_handler)
-
-    # sys.stdout = stdout_logger
-    # sys.stderr = stderr_logger
+from utils.logging_config import setup_logging
 
 
 def send_email_notification(
@@ -80,7 +57,7 @@ def send_email_notification(
         )
 
     except Exception as e:
-        logging.error(f"Error sending email notification: {str(e)}")
+        print(f"Error sending email notification: {str(e)}")
 
 
 def main():
@@ -154,7 +131,7 @@ def main():
     parser.add_argument(
         "--log_folder",
         type=str,
-        default="./data/log/",
+        default="~/log/",
         help="Folder where the log file should be created.",
     )
 
@@ -164,23 +141,24 @@ def main():
     try:
         # Set up logging with the specified log folder and filename
         setup_logging(args.log_folder, log_filename)
+        logger = logging.getLogger(__name__)
 
-        # Step 1: Download the SFTP files to the PVC
-        sftp_downloader.run(
-            host=args.sftp_host,
-            port=args.sftp_port,
-            username=args.sftp_username,
-            password=args.sftp_password,
-            remote_path=args.sftp_remote_path,
-            local_path=args.sftp_local_path,
-        )
+        # # Step 1: Download the SFTP files to the PVC
+        # sftp_downloader.run(
+        #     host=args.sftp_host,
+        #     port=args.sftp_port,
+        #     username=args.sftp_username,
+        #     password=args.sftp_password,
+        #     remote_path=args.sftp_remote_path,
+        #     local_path=args.sftp_local_path,
+        # )
 
         # Step 2: Process the downloaded SFTP files and write to the output folder
-        ltsa_parser.run(
-            input_directory=args.sftp_local_path,
-            output_directory=args.processed_data_path,
-            data_rules_url=args.data_rules_url,
-        )
+        # ltsa_parser.run(
+        #     input_directory=args.sftp_local_path,
+        #     output_directory=args.processed_data_path,
+        #     data_rules_url=args.data_rules_url,
+        # )
 
         # Step 3: Write the above processed data to the PostgreSQL database
         postgres_writer.run(
@@ -193,22 +171,22 @@ def main():
             password=args.db_password,
         )
 
-        # Step 4: Expire PINs of cancelled titles
-        pin_expirer.run(
-            input_directory=args.sftp_local_path,
-            output_directory=args.processed_data_path,
-            expire_api_url=args.expire_api_url,
-            database_name=args.db_name,
-            host=args.db_host,
-            port=args.db_port,
-            user=args.db_username,
-            password=args.db_password,
-        )
+        # # Step 4: Expire PINs of cancelled titles
+        # pin_expirer.run(
+        #     input_directory=args.sftp_local_path,
+        #     output_directory=args.processed_data_path,
+        #     expire_api_url=args.expire_api_url,
+        #     database_name=args.db_name,
+        #     host=args.db_host,
+        #     port=args.db_port,
+        #     user=args.db_username,
+        #     password=args.db_password,
+        # )
 
-        logging.info("ETL job completed successfully")
+        logger.info("ETL job completed successfully")
 
     except Exception as e:
-        logging.error(f"An error occurred: {str(e)}")
+        logger.info(f"An error occurred: {str(e)}")
 
     finally:
         personalisation = {
@@ -216,6 +194,8 @@ def main():
             "job_status": "Success" if "e" not in locals() else "Failure",
             "error_message": str(e) if "e" in locals() else None,
         }
+
+        logger.info(personalisation)
 
         # Send an email with the log file attachment regardless of success or error
         # send_email_notification(
