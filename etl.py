@@ -28,7 +28,7 @@ def setup_logging(log_folder, log_filename, logger_name):
     logger = logging.getLogger(logger_name)
 
     # Configure the logger to write log messages to a file
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.INFO) 
     file_handler = logging.FileHandler(log_path)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
@@ -153,7 +153,7 @@ def main():
     parser.add_argument(
         "--log_folder",
         type=str,
-        default="./data/log/",
+        default="~/log/",
         help="Folder where the log file should be created.",
     )
 
@@ -164,15 +164,15 @@ def main():
         # Set up logging with the specified log folder and filename
         setup_logging(args.log_folder, log_filename, "ETL")
 
-        # Step 1: Download the SFTP files to the PVC
-        sftp_downloader.run(
-            host=args.sftp_host,
-            port=args.sftp_port,
-            username=args.sftp_username,
-            password=args.sftp_password,
-            remote_path=args.sftp_remote_path,
-            local_path=args.sftp_local_path,
-        )
+        # # Step 1: Download the SFTP files to the PVC
+        # sftp_downloader.run(
+        #     host=args.sftp_host,
+        #     port=args.sftp_port,
+        #     username=args.sftp_username,
+        #     password=args.sftp_password,
+        #     remote_path=args.sftp_remote_path,
+        #     local_path=args.sftp_local_path,
+        # )
 
         # Step 2: Process the downloaded SFTP files and write to the output folder
         ltsa_parser.run(
