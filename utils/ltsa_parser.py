@@ -23,6 +23,7 @@ def load_data_cleaning_rules(data_rules_url):
 def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
     # Load data cleaning rules from the specified GitHub URL
     data_cleaning = load_data_cleaning_rules(data_rules_url)
+    
 
     # Apply cleaning rules to each column
     for column, rule in data_cleaning["column_rules"].items():
