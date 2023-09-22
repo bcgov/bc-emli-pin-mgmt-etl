@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import numpy as np
 import requests
+import time
 import os
 
 
@@ -22,6 +23,8 @@ def load_data_cleaning_rules(data_rules_url):
 
 def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
     # Load data cleaning rules from the specified GitHub URL
+    data_cleaning_start_time = time.time()
+
     data_cleaning = load_data_cleaning_rules(data_rules_url)
     
 
@@ -93,13 +96,15 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
 
     active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
 
+    data_cleaning_elapsed_time = time.time() - data_cleaning_start_time
     print(
-        f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'active_pin.csv'}"
+        f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'active_pin.csv'}. Elapsed Time: {data_cleaning_elapsed_time:.2f} seconds"
     )
 
 
 def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     # Read, process, and write CSV files
+    read_files_start_time = time.time()
 
     # 1_title.csv
     title_df = (
@@ -120,7 +125,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
                 "FRM_LT_DISTRICT_CD": str,
             },
         )
-        .applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
     )
@@ -149,7 +154,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
             dtype={"PRMNNT_PRCL_ID": int, "PRCL_STTS_CD": str},
         )
-        .applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
     )
@@ -171,7 +176,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
             dtype={"TITLE_NMBR": str, "LTB_DISTRICT_CD": str, "PRMNNT_PRCL_ID": int},
         )
-        .applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
     )
@@ -227,7 +232,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
                 "ADDRS_PSTL_CD": str,
             },
         )
-        .applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
     )
@@ -253,11 +258,16 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
 
     title_owner_df.to_csv(output_directory + "titleowner_raw.csv", index=False)
+
+    read_files_elapsed_time = time.time() - read_files_start_time
+
     print(
-        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'titleowner_raw.csv'}"
+        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'titleowner_raw.csv'}. Elapsed Time: {read_files_elapsed_time:.2f} seconds"
     )
 
     # Join dataframes
+    parse_files_start_time = time.time()
+
     title_titleowner_df = pd.merge(
         title_owner_df, title_df, on=["title_number", "land_title_district"]
     )
@@ -297,12 +307,24 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     active_pin_df = active_pin_df.loc[active_pin_df.astype(str).drop_duplicates().index]
     print("DUPLICATE ROWS DROPPED----------------active_pin_df")
 
+    parse_files_elapsed_time = time.time() - parse_files_start_time
+    print(
+        f"DATA PARSING COMPLETE. Elapsed Time: {parse_files_elapsed_time:.2f} seconds"
+    )
+
     clean_active_pin_df(active_pin_df, output_directory, data_rules_url)
 
 
 def run(input_directory, output_directory, data_rules_url):
+    start_time = time.time()
+
     # Parse the files
     parse_ltsa_files(input_directory, output_directory, data_rules_url)
+
+    end_time = time.time()
+    total_time = end_time - start_time
+
+    print(f"All files parsed and cleaned. Total time elapsed: {total_time:.2f} seconds")
 
 
 if __name__ == "__main__":
