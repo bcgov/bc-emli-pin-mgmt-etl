@@ -131,7 +131,7 @@ def main():
     parser.add_argument(
         "--log_folder",
         type=str,
-        default="~/log/",
+        default="/data/log/",
         help="Folder where the log file should be created.",
     )
 
