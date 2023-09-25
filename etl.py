@@ -20,8 +20,9 @@ def send_email_notification(
     template_id,
     log_folder,
     log_filename,
+    start_time,
     status,
-    error_message=None,
+    message,
 ):
     """
     Send an email notification with a log file attachment.
@@ -43,8 +44,9 @@ def send_email_notification(
         log_path = os.path.join(log_folder, log_filename)
         personalisation = {
             # "log_filename": log_filename,
-            "name": status,
-            "value": error_message,
+            "start_time": start_time,
+            "status": status,
+            "message": message,
         }
 
         gc_notify_log(
@@ -61,6 +63,8 @@ def send_email_notification(
 
 
 def main():
+    start_time = datetime.now().strftime("%a %d %b %Y, %I:%M%p")
+
     parser = argparse.ArgumentParser(
         prog="BC PVS ETL Job",
         description="This is the ETL job that expires PINS.",
@@ -190,17 +194,10 @@ def main():
         logger.info(f"An error occurred: {str(e)}")
 
     finally:
-        # change name to job_status
-        # change value to error_message
-        # after creating template with these values
-        # personalisation = {
-        #     "log_filename": os.path.basename(log_filename),
-        #     "name": "Success" if "e" not in locals() else "Failure",
-        #     "value": str(e) if "e" in locals() else None,
-        # }
         personalisation = {
-            "name": "Amala",
-            "value": "2018-01-01",
+            "start_time": start_time,
+            "status": "Success" if "e" not in locals() else "Failure",
+            "message": str(e) if "e" in locals() else None,
         }
 
         logger.info(personalisation)
@@ -213,8 +210,9 @@ def main():
             args.template_id,
             args.log_folder,
             log_filename,
-            personalisation["name"],
-            personalisation.get("value"),
+            personalisation["start_time"],
+            personalisation["status"],
+            personalisation["message"],
         )
 
 
