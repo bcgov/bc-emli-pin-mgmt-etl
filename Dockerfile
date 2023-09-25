@@ -29,4 +29,9 @@ CMD python etl.py \
     --db_username=${db_username} \
     --db_password=${db_password} \
     --data_rules_url=${data_rules_url} \
+    --api_key=${api_key} \
+    --base_url=${base_url} \
+    --email_address=${email_address} \
+    --template_id=${template_id} \
+    --log_folder=${log_folder} \
     --expire_api_url=${expire_api_url}
