@@ -197,7 +197,7 @@ def main():
         personalisation = {
             "start_time": start_time,
             "status": "Success" if "e" not in locals() else "Failure",
-            "message": str(e) if "e" in locals() else None,
+            "message": str(e) if "e" in locals() else "ETL job completed successfully",
         }
 
         logger.info(personalisation)
