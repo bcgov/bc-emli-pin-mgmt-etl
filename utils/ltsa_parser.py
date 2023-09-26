@@ -102,6 +102,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     # Read, process, and write CSV files
     read_files_start_time = time.time()
 
+    # If not null fields are null, drop them
+    # Add number of dropped rows to logs
+
     # 1_title.csv
     title_df = (
         pd.read_csv(

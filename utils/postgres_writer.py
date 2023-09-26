@@ -1,7 +1,57 @@
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, insert, text, table, column
 import time
 import psycopg2, os
+
+def update_postgres_table_if_rows_not_exist(dataframe, table_name, engine, unique_key_column):
+    try:
+        dataframe[unique_key_column] = dataframe.apply(lambda x: str(hash("".join(x.astype(str)))), axis=1)
+        print(dataframe[unique_key_column][0], dataframe['pid'][0], dataframe['parcel_status'][0])
+
+        # Create a list of column names as a comma-separated string
+        column_names = ", ".join(dataframe.columns)
+
+        print(f"column_names: {column_names}")
+
+        # Create a list of placeholders for SQL parameter binding
+        placeholders = ", ".join(["%s"] * len(dataframe.columns))
+
+        # i = 0
+        # placeholders = ""
+        # # Create a list of placeholders for SQL parameter binding
+        # while i < len(dataframe.columns):
+        #     placeholder = '$'+str(i)
+        #     if placeholders:
+        #         placeholders = placeholders + ", " + placeholder
+        #     else:
+        #         placeholders = placeholder
+        #     i += 1
+
+        print(f"placeholders: {placeholders}")
+
+        # Convert the DataFrame to a list of tuples for insertion
+        data_to_insert = [tuple(row) for row in dataframe.values]
+
+        # Create a SQL INSERT statement with ON CONFLICT DO NOTHING clause
+        insert_sql = f"""INSERT INTO {table_name} ({column_names}) VALUES ({placeholders}) ON CONFLICT ({(unique_key_column)}) DO NOTHING;"""
+        
+        print(f"{insert_sql}") 
+
+        # print(dataframe.to_dict('index'))
+
+        # print(data_to_insert)
+
+        print(tuple([48445, 'A', '596961961526128802']))
+
+        # Execute the SQL statement with parameter binding
+        with engine.connect() as conn:
+            conn.execute(text(insert_sql), (48445, 'A', '596961961526128802'))
+
+        print('here2')
+        return "Table updated successfully."
+
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
 def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
@@ -19,6 +69,8 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
     """
     total_rows_inserted = 0  # Initialize the total count of rows inserted
     try:
+        # response = update_postgres_table_if_rows_not_exist(dataframe, table_name, engine, 'unique_key')
+        # print(response)
         print(f"Updating table '{table_name}'...")  # Print the table being updated
 
         # Split the dataframe into batches
@@ -27,8 +79,9 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
         ]
 
         for i, batch in enumerate(batch_list):
+            print('here')
             rows_inserted = len(batch)
-            batch.to_sql(table_name, engine, if_exists="append", index=False)
+            batch.to_sql(table_name, engine, if_exists="append", index=False, method=insert_on_duplicate)
             total_rows_inserted += rows_inserted  # Update the total count
 
         return total_rows_inserted  # Return the total count of rows inserted
