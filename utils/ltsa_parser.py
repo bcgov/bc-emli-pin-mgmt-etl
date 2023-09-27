@@ -124,7 +124,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
-        .replace("'", "'")
+        .replace("'", "\'")  # fmt: skip
     )
     print("READ FILE----------------1_title.csv")
 
@@ -154,7 +154,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
-        .replace("'", "'")
+        .replace("'", "\'")  # fmt: skip
     )
     print("READ FILE----------------2_parcel.csv")
 
@@ -177,7 +177,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
-        .replace("'", "'")
+        .replace("'", "\'")  # fmt: skip
     )
     print("READ FILE----------------3_titleparcel.csv")
 
@@ -234,7 +234,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
-        .replace("'", "'")
+        .replace("'", "\'")  # fmt: skip
     )
     print("READ FILE----------------4_titleowner.csv")
 
