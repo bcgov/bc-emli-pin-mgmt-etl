@@ -21,33 +21,20 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
     try:
         print(f"Updating table '{table_name}'...")  # Print the table being updated
 
+        dataframe['unique_key'] = dataframe.apply(lambda x: str("".join(x.astype(str))), axis=1)
+
         # Split the dataframe into batches
         batch_list = [
             dataframe[i : i + batch_size] for i in range(0, len(dataframe), batch_size)
         ]
 
-        with engine.begin() as cnx:
-            print("creating temporary table")
-            drop_sql = f"DROP TABLE IF EXISTS temporary_table"
-            cnx.execute(text(drop_sql))
-            create_table_sql = (
-                f"CREATE TABLE temporary_table AS SELECT * FROM {table_name} WHERE 0=1"
-            )
-            cnx.execute(text(create_table_sql))
-            if table_name == "active_pin":
-                alter_table_sql = (
-                    f"ALTER TABLE {table_name} ALTER COLUMN live_pin_id DROP NOT NULL"
-                )
-                cnx.execute(text(alter_table_sql))
-
         for i, batch in enumerate(batch_list):
-            print(len(batch_list))
             rows_inserted = len(batch)
 
             batch.to_sql("temporary_table", engine, if_exists="append", index=False)
 
             with engine.begin() as cnx:
-                insert_sql = f"INSERT INTO {table_name} (SELECT * FROM temporary_table WHERE NOT EXISTS (SELECT * FROM {table_name}))"
+                insert_sql = f"INSERT INTO {table_name} (SELECT * FROM temporary_table) ON CONFLICT (unique_key) DO NOTHING"
                 cnx.execute(text(insert_sql))
 
             total_rows_inserted += rows_inserted  # Update the total count
