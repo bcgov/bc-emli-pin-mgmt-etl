@@ -7,7 +7,7 @@ import psycopg2, os
 
 
 def create_unique_key(unique_column):
-    unique_string = str("".join(unique_column.astype(str)))
+    unique_string = str("".join(unique_column.astype(str))).replace(" ", "")
     # unique_string = zlib.compress(unique_string.encode())
     return unique_string
 
