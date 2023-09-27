@@ -2,7 +2,13 @@ import pandas as pd
 from sqlalchemy import text, create_engine, exc
 import time
 import psycopg2, os
+# import zlib
+import psycopg2.extras
 
+def create_unique_key(unique_column):
+    unique_string = str("".join(unique_column.astype(str)))
+    # unique_string = zlib.compress(unique_string.encode())
+    return unique_string
 
 def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
     """
@@ -21,7 +27,9 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
     try:
         print(f"Updating table '{table_name}'...")  # Print the table being updated
 
-        dataframe['unique_key'] = dataframe.apply(lambda x: str("".join(x.astype(str))), axis=1)
+        dataframe['unique_key'] = dataframe.apply(lambda x: create_unique_key(x), axis=1)
+
+        columns_names = ", ".join(dataframe.columns)
 
         # Split the dataframe into batches
         batch_list = [
@@ -34,7 +42,7 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
             batch.to_sql("temporary_table", engine, if_exists="append", index=False)
 
             with engine.begin() as cnx:
-                insert_sql = f"INSERT INTO {table_name} (SELECT * FROM temporary_table) ON CONFLICT (unique_key) DO NOTHING"
+                insert_sql = f"INSERT INTO {table_name} ({columns_names}) SELECT {columns_names} FROM temporary_table ON CONFLICT (unique_key) DO NOTHING"
                 cnx.execute(text(insert_sql))
 
             total_rows_inserted += rows_inserted  # Update the total count
