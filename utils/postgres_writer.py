@@ -1,7 +1,15 @@
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import text, create_engine
 import time
 import psycopg2, os
+
+# import zlib
+
+
+def create_unique_key(unique_column):
+    unique_string = str("".join(unique_column.astype(str))).replace(" ", "")
+    # unique_string = zlib.compress(unique_string.encode())
+    return unique_string
 
 
 def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
@@ -21,6 +29,12 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
     try:
         print(f"Updating table '{table_name}'...")  # Print the table being updated
 
+        dataframe["unique_key"] = dataframe.apply(
+            lambda x: create_unique_key(x), axis=1
+        )
+
+        columns_names = ", ".join(dataframe.columns)
+
         # Split the dataframe into batches
         batch_list = [
             dataframe[i : i + batch_size] for i in range(0, len(dataframe), batch_size)
@@ -28,12 +42,28 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
 
         for i, batch in enumerate(batch_list):
             rows_inserted = len(batch)
-            batch.to_sql(table_name, engine, if_exists="append", index=False)
+
+            batch.to_sql("temporary_table", engine, if_exists="append", index=False)
+
+            with engine.begin() as cnx:
+                insert_sql = f"INSERT INTO {table_name} ({columns_names}) SELECT {columns_names} FROM temporary_table ON CONFLICT (unique_key) DO NOTHING"
+                cnx.execute(text(insert_sql))
+
             total_rows_inserted += rows_inserted  # Update the total count
+
+        with engine.begin() as cnx:
+            print("dropping temp table")
+            drop_sql = f"DROP TABLE IF EXISTS temporary_table"
+            cnx.execute(text(drop_sql))
 
         return total_rows_inserted  # Return the total count of rows inserted
 
     except Exception as e:
+        with engine.begin() as cnx:
+            print("dropping temp table")
+            drop_sql = f"DROP TABLE IF EXISTS temporary_table"
+            cnx.execute(text(drop_sql))
+
         print(f"An error occurred: {str(e)}")
         return 0
 
