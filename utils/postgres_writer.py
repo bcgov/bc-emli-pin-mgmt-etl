@@ -1,5 +1,5 @@
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import text, create_engine
 import time
 import psycopg2, os
 
