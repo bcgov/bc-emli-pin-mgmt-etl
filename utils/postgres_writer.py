@@ -75,9 +75,7 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
             update_response = update_postgres_table_if_rows_not_exist(
                 batch, table_name, engine, unique_key_columns
             )
-            f = open("logs.txt", "a")
-            f.write(update_response)
-            f.close()
+            print(update_response)
 
         # print("Table updated successfully.")
 
