@@ -139,9 +139,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
 
     title_df.to_csv(output_directory + "title_raw.csv", index=False)
-    print(
-        f"Wrote raw ltsa data to file: {output_directory+'title_raw.csv'}"
-    )
+    print(f"Wrote raw ltsa data to file: {output_directory+'title_raw.csv'}")
 
     # 2_parcel.csv
     parcel_df = (
@@ -161,9 +159,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
 
     parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
-    print(
-        f"Wrote raw LTSA data to file: {output_directory+'parcel_raw.csv'}"
-    )
+    print(f"Wrote raw LTSA data to file: {output_directory+'parcel_raw.csv'}")
 
     # 3_titleparcel.csv
     title_parcel_df = (
@@ -187,9 +183,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
 
     title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
-    print(
-        f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}"
-    )
+    print(f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}")
 
     # 4_titleowner.csv
     title_owner_df = (

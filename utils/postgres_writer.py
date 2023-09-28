@@ -34,12 +34,12 @@ def insert_postgres_table_if_rows_not_exist(
 
     except Exception as e:
         return f"Error: {str(e)}"
-    
+
 
 def get_table_rows(table_name, engine):
     query = select([func.count()]).select_from(text(table_name))
     conn = engine.connect()
-    totalCount = conn.execute(query).fetchone()[0] 
+    totalCount = conn.execute(query).fetchone()[0]
     return totalCount
 
 
@@ -77,7 +77,7 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
             )
             if update_response:
                 print(update_response)
-        
+
         print("Table updated")
 
         rows_after_insert = get_table_rows(table_name, engine)
