@@ -8,7 +8,7 @@ import psycopg2, os
 
 
 def update_postgres_table_if_rows_not_exist(
-    dataframe, table_name, engine, unique_key_columns
+    dataframe, table_name, engine, unique_key_columns, batch_number
 ):
     try:
         # Create a list of column names as a comma-separated string
@@ -17,19 +17,24 @@ def update_postgres_table_if_rows_not_exist(
         # Convert the DataFrame to a list of tuples for insertion
         data_to_insert = [tuple(row) for row in dataframe.values]
         data_to_insert = (
-            str(data_to_insert)[1:-1].replace(', "', ", '").replace('",', "',")
+            str(data_to_insert)[1:-1]
+            .replace("'", "''")
+            .replace(", ''", ", '")
+            .replace("'',", "',")
+            .replace("(''", "('")
+            .replace("'')", "')")
+            .replace("', \"", "', '")
+            .replace("\", '", "', '")
         )
 
         # Create a SQL INSERT statement with ON CONFLICT DO NOTHING clause
         insert_sql = f"INSERT INTO {table_name} ({column_names}) VALUES {data_to_insert} ON CONFLICT ({', '.join(unique_key_columns)}) DO NOTHING;"
 
-        # print(insert_sql)
-
         # Execute the SQL statement with parameter binding
         with engine.begin() as conn:
             conn.execute(text(insert_sql))
 
-        return "Table updated successfully."
+        return f"Batch number {batch_number + 1} updated successfully"
 
     except Exception as e:
         return f"Error: {str(e)}"
@@ -64,11 +69,9 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
 
         for i, batch in enumerate(batch_list):
             update_response = update_postgres_table_if_rows_not_exist(
-                batch, table_name, engine, unique_key_columns
+                batch, table_name, engine, unique_key_columns, i
             )
             print(update_response)
-
-        # print("Table updated successfully.")
 
         return total_rows_inserted  # Return the total count of rows inserted
 
