@@ -17,8 +17,17 @@ def update_postgres_table_if_rows_not_exist(
         # Convert the DataFrame to a list of tuples for insertion
         data_to_insert = [tuple(row) for row in dataframe.values]
         data_to_insert = (
-            str(data_to_insert)[1:-1].replace(', "', ", '").replace('",', "',")
+            str(data_to_insert)[1:-1]
+            .replace("'", "''")
+            .replace(", ''", ", '")
+            .replace("'',", "',")
+            .replace(', "', ", '")
+            .replace('", ', "', ")
+            .replace("(''", "('")
+            .replace("'')", "')")
         )
+
+        # print(data_to_insert)
 
         # Create a SQL INSERT statement with ON CONFLICT DO NOTHING clause
         insert_sql = f"INSERT INTO {table_name} ({column_names}) VALUES {data_to_insert} ON CONFLICT ({', '.join(unique_key_columns)}) DO NOTHING;"
@@ -66,7 +75,9 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
             update_response = update_postgres_table_if_rows_not_exist(
                 batch, table_name, engine, unique_key_columns
             )
-            print(update_response)
+            f = open("logs.txt", "a")
+            f.write(update_response)
+            f.close()
 
         # print("Table updated successfully.")
 
@@ -120,7 +131,9 @@ def run(
         for file_name in file_list:
             file_path = os.path.join(input_directory, file_name)
             # Adjust for different file formats (e.g., pd.read_csv for CSV files)
-            df = pd.read_csv(file_path, encoding="unicode_escape", low_memory=False)
+            df = pd.read_csv(
+                file_path, encoding="unicode_escape", low_memory=False
+            ).replace("'", "'")
             # Use file name without extension as table name
             table_name = os.path.splitext(file_name)[0]
             rows_inserted = write_dataframe_to_postgres(
