@@ -23,8 +23,8 @@ def update_postgres_table_if_rows_not_exist(
             .replace("'',", "',")
             .replace("(''", "('")
             .replace("'')", "')")
-            .replace('\', "', "', '")
-            .replace('", \'', "', '")
+            .replace("', \"", "', '")
+            .replace("\", '", "', '")
         )
 
         # Create a SQL INSERT statement with ON CONFLICT DO NOTHING clause
@@ -123,9 +123,7 @@ def run(
         for file_name in file_list:
             file_path = os.path.join(input_directory, file_name)
             # Adjust for different file formats (e.g., pd.read_csv for CSV files)
-            df = pd.read_csv(
-                file_path, encoding="unicode_escape", low_memory=False
-            )
+            df = pd.read_csv(file_path, encoding="unicode_escape", low_memory=False)
             # Use file name without extension as table name
             table_name = os.path.splitext(file_name)[0]
             rows_inserted = write_dataframe_to_postgres(
