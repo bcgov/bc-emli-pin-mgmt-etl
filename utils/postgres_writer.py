@@ -1,14 +1,12 @@
 import numpy as np
 import pandas as pd
-from sqlalchemy import text, create_engine
+from sqlalchemy import text, create_engine, func, select
 import time
 import psycopg2, os
 
-# import zlib
 
-
-def update_postgres_table_if_rows_not_exist(
-    dataframe, table_name, engine, unique_key_columns, batch_number
+def insert_postgres_table_if_rows_not_exist(
+    dataframe, table_name, engine, unique_key_columns
 ):
     try:
         # Create a list of column names as a comma-separated string
@@ -34,10 +32,15 @@ def update_postgres_table_if_rows_not_exist(
         with engine.begin() as conn:
             conn.execute(text(insert_sql))
 
-        return f"Batch number {batch_number + 1} updated successfully"
-
     except Exception as e:
         return f"Error: {str(e)}"
+    
+
+def get_table_rows(table_name, engine):
+    query = select([func.count()]).select_from(text(table_name))
+    conn = engine.connect()
+    totalCount = conn.execute(query).fetchone()[0] 
+    return totalCount
 
 
 def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
@@ -57,6 +60,7 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
     try:
         print(f"Updating table '{table_name}'...")  # Print the table being updated
 
+        rows_before_insert = get_table_rows(table_name, engine)
         dataframe = dataframe.replace(np.nan, "")
 
         # Split the dataframe into batches
@@ -67,11 +71,17 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
         # Define the columns that make up the unique key --all columns
         unique_key_columns = dataframe.columns.tolist()
 
-        for i, batch in enumerate(batch_list):
-            update_response = update_postgres_table_if_rows_not_exist(
-                batch, table_name, engine, unique_key_columns, i
+        for batch in enumerate(batch_list):
+            update_response = insert_postgres_table_if_rows_not_exist(
+                batch, table_name, engine, unique_key_columns
             )
-            print(update_response)
+            if update_response:
+                print(update_response)
+        
+        print("Table updated")
+
+        rows_after_insert = get_table_rows(table_name, engine)
+        total_rows_inserted = rows_after_insert - rows_before_insert
 
         return total_rows_inserted  # Return the total count of rows inserted
 

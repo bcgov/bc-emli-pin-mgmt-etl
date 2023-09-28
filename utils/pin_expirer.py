@@ -18,7 +18,7 @@ def create_expiration_file(input_directory):
             "TTL_STTS_CD": str,
         },
     ).map(lambda x: x.strip() if isinstance(x, str) else x)
-    print("READ FILE----------------1_title.csv")
+    print("Read file: 1_title.csv")
 
     title_df.rename(
         columns={

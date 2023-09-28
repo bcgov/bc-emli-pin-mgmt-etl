@@ -1,7 +1,6 @@
 import argparse
 import logging
 import os
-import sys
 from datetime import datetime
 from utils import (
     ltsa_parser,
@@ -11,6 +10,7 @@ from utils import (
 )
 from utils.gc_notify import gc_notify_log
 from utils.logging_config import setup_logging
+import time
 
 
 def send_email_notification(
@@ -150,6 +150,10 @@ def main():
         logger = logging.getLogger(__name__)
 
         # Step 1: Download the SFTP files to the PVC
+
+        downloader_start_time = time.time()
+        print('------\nSTEP 1: DOWNLOADING LTSA FILES\n------')
+
         sftp_downloader.run(
             host=args.sftp_host,
             port=args.sftp_port,
@@ -158,15 +162,29 @@ def main():
             remote_path=args.sftp_remote_path,
             local_path=args.sftp_local_path,
         )
+        
+        downloader_elapsed_time = time.time() - downloader_start_time
+        print(f'------\nSTEP 1 COMPLETED: DOWNLOADED LTSA FILES. Elapsed Time: {downloader_elapsed_time:.2f} seconds')
 
         # Step 2: Process the downloaded SFTP files and write to the output folder
+
+        parser_start_time = time.time()
+        print('------\nSTEP 2: PARSING LTSA FILES\n------')
+
         ltsa_parser.run(
             input_directory=args.sftp_local_path,
             output_directory=args.processed_data_path,
             data_rules_url=args.data_rules_url,
         )
 
+        parser_elapsed_time = time.time() - parser_start_time
+        print(f'------\nSTEP 2 COMPLETED: PARSED LTSA FILES. Elapsed Time: {parser_elapsed_time:.2f} seconds')
+
         # Step 3: Write the above processed data to the PostgreSQL database
+
+        writer_start_time = time.time()
+        print('------\nSTEP 3: WRITING PARSED FILES TO DATABASE\n------')
+
         postgres_writer.run(
             input_directory=args.processed_data_path,
             database_name=args.db_name,
@@ -177,7 +195,14 @@ def main():
             password=args.db_password,
         )
 
+        writer_elapsed_time = time.time() - writer_start_time
+        print(f'------\nSTEP 3 COMPLETED: WROTE PARSED FILES TO DATABASE. Elapsed Time: {writer_elapsed_time:.2f} seconds')
+
         # Step 4: Expire PINs of cancelled titles
+
+        expier_start_time = time.time()
+        print('------\nSTEP 4: EXPIRING PINS\n------')
+
         pin_expirer.run(
             input_directory=args.sftp_local_path,
             expire_api_url=args.expire_api_url,
@@ -188,7 +213,10 @@ def main():
             password=args.db_password,
         )
 
-        logger.info("ETL job completed successfully")
+        expier_elapsed_time = time.time() - expier_start_time
+        print(f'------\nSTEP 4 COMPLETED: EXPIRED PINS. Elapsed Time: {expier_elapsed_time:.2f} seconds')
+
+        logger.info("------\nETL JOB COMPLETED SUCCESSFULLY\n------")
 
     except Exception as e:
         logger.info(f"An error occurred: {str(e)}")
