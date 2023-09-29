@@ -7,11 +7,29 @@ import os
 
 
 def pid_parser(pids):
+    """
+    Parses list of pids into string form.
+
+    Parameters:
+    - pids (list): List of parcel ids.
+
+    Returns:
+    - pids (str): String of pids in cleaned form.
+    """
     # Combine and format PIDs as a string
     return "|".join(sorted(set(map(str, pids))))
 
 
 def load_data_cleaning_rules(data_rules_url):
+    """
+    Loads content from data_rules.json file hosted on github.
+
+    Parameters:
+    - data_rules_url (str): URL to data_rules.json file hosted on github.
+
+    Returns:
+    - data_cleaning (dict): Dictionary of rules read from data_rules.json.
+    """
     # Load data cleaning rules from a JSON file hosted on GitHub
     response = requests.get(data_rules_url)
     if response.status_code == 200:
@@ -22,6 +40,17 @@ def load_data_cleaning_rules(data_rules_url):
 
 
 def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
+    """
+    Applies cleaning rules from data_rules_url to active_pin_df.
+
+    Parameters:
+    - active_pin_df (pd.Dataframe): The dataframe to be cleaned.
+    - output_directory (str): Directory to write active_pin.csv to.
+    - data_rules_url (str): URL to data_rules.json file hosted on github.
+
+    Returns:
+    - None
+    """
     # Load data cleaning rules from the specified GitHub URL
     data_cleaning_start_time = time.time()
 
@@ -86,7 +115,7 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
                         active_pin_df[to_column],
                     )
 
-    print(f"CLEANING RULES APPLIED TO FILE:----------------active_pin.csv")
+    print(f"Cleaning rules applied to file: active_pin.csv")
 
     active_pin_df = active_pin_df.drop(columns=["occupation", "parcel_status"])
 
@@ -94,11 +123,22 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
 
     data_cleaning_elapsed_time = time.time() - data_cleaning_start_time
     print(
-        f"WROTE CLEANED LTSA DATA TO FILE:----------------{output_directory+'active_pin.csv'}. Elapsed Time: {data_cleaning_elapsed_time:.2f} seconds"
+        f"Wrote cleaned ltsa data to file: {output_directory+'active_pin.csv'}. Elapsed Time: {data_cleaning_elapsed_time:.2f} seconds"
     )
 
 
 def parse_ltsa_files(input_directory, output_directory, data_rules_url):
+    """
+    Reads raw LTSA files to CSVs and writes them to output_directory. Writes processed and cleaned data to active_pin.csv.
+
+    Parameters:
+    - input_directory (str): Directory to read LTSA CSV files from.
+    - output_directory (str): Directory to write CSV files to.
+    - data_rules_url (str): URL to data_rules.json file hosted on github.
+
+    Returns:
+    - None
+    """
     # Read, process, and write CSV files
     read_files_start_time = time.time()
 
@@ -124,8 +164,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
+        .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "TTL_STTS_CD"])
     )
-    print("READ FILE----------------1_title.csv")
+    print("Read file: 1_title.csv")
 
     title_df.rename(
         columns={
@@ -139,9 +180,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
 
     title_df.to_csv(output_directory + "title_raw.csv", index=False)
-    print(
-        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'title_raw.csv'}"
-    )
+    print(f"Wrote raw ltsa data to file: {output_directory+'title_raw.csv'}")
 
     # 2_parcel.csv
     parcel_df = (
@@ -153,17 +192,16 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
+        .dropna(subset=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"])
     )
-    print("READ FILE----------------2_parcel.csv")
+    print("Read file: 2_parcel.csv")
 
     parcel_df = parcel_df.rename(
         columns={"PRMNNT_PRCL_ID": "pid", "PRCL_STTS_CD": "parcel_status"}
     )
 
     parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
-    print(
-        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'parcel_raw.csv'}"
-    )
+    print(f"Wrote raw LTSA data to file: {output_directory+'parcel_raw.csv'}")
 
     # 3_titleparcel.csv
     title_parcel_df = (
@@ -175,8 +213,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
+        .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"])
     )
-    print("READ FILE----------------3_titleparcel.csv")
+    print("Read file: 3_titleparcel.csv")
 
     title_parcel_df = title_parcel_df.rename(
         columns={
@@ -187,9 +226,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     )
 
     title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
-    print(
-        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'titleparcel_raw.csv'}"
-    )
+    print(f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}")
 
     # 4_titleowner.csv
     title_owner_df = (
@@ -231,8 +268,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
+        .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD"])
     )
-    print("READ FILE----------------4_titleowner.csv")
+    print("Read file: 4_titleowner.csv")
 
     title_owner_df = title_owner_df.rename(
         columns={
@@ -258,7 +296,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     read_files_elapsed_time = time.time() - read_files_start_time
 
     print(
-        f"WROTE RAW LTSA DATA TO FILE:----------------{output_directory+'titleowner_raw.csv'}. Elapsed Time: {read_files_elapsed_time:.2f} seconds"
+        f"Wrote raw LTSA data to file: {output_directory+'titleowner_raw.csv'}. Elapsed Time: {read_files_elapsed_time:.2f} seconds"
     )
 
     # Join dataframes
@@ -267,20 +305,20 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     title_titleowner_df = pd.merge(
         title_owner_df, title_df, on=["title_number", "land_title_district"]
     )
-    print("DATAFRAMES MERGED----------------title_owner_df, title_df")
-    print(f"NUMBER OF ROWS IN title_titleowner_df: {len(title_titleowner_df)}")
+    print("Dataframes merged: title_owner_df, title_df")
+    print(f"Number of rows in title_titleowner_df: {len(title_titleowner_df)}")
 
     titleparcel_parcel_df = pd.merge(title_parcel_df, parcel_df, on="pid")
-    print("DATAFRAMES MERGED----------------title_parcel_df AND parcel_df")
-    print(f"NUMBER OF ROWS IN titleparcel_parcel_df: {len(titleparcel_parcel_df)}")
+    print("Dataframes merged: title_parcel_df, parcel_df")
+    print(f"Number of rows in titleparcel_parcel_df: {len(titleparcel_parcel_df)}")
 
     active_pin_df = pd.merge(
         title_titleowner_df,
         titleparcel_parcel_df,
         on=["title_number", "land_title_district"],
     )
-    print("DATAFRAMES MERGED----------------title_titleowner_df, titleparcel_parcel_df")
-    print(f"NUMBER OF ROWS IN active_pin_df: {len(active_pin_df)}")
+    print("Dataframes merged: title_titleowner_df, titleparcel_parcel_df")
+    print(f"Number of rows in active_pin_df: {len(active_pin_df)}")
 
     # Group by title number to get a list of active pids associated with each title
     titlenumber_pids_df = (
@@ -288,7 +326,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .apply(list)
         .reset_index(name="pids")
     )
-    print("GROUPED DATAFRAME CREATED----------------titlenumber_pids_df")
+    print("Grouped dataframe created: titlenumber_pids_df")
 
     # Format PIDs as strings
     titlenumber_pids_df["pids"] = titlenumber_pids_df["pids"].apply(pid_parser)
@@ -297,21 +335,32 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     active_pin_df = pd.merge(
         active_pin_df, titlenumber_pids_df, on=["title_number", "land_title_district"]
     ).drop(columns=["pid"])
-    print("DATAFRAMES MERGED----------------active_pin_df, titlenumber_pids_df")
+    print("Dataframes merged: active_pin_df, titlenumber_pids_df")
 
     # Remove duplicate rows
     active_pin_df = active_pin_df.loc[active_pin_df.astype(str).drop_duplicates().index]
-    print("DUPLICATE ROWS DROPPED----------------active_pin_df")
+    print("Duplicate rows dropped: active_pin_df")
 
     parse_files_elapsed_time = time.time() - parse_files_start_time
     print(
-        f"DATA PARSING COMPLETE. Elapsed Time: {parse_files_elapsed_time:.2f} seconds"
+        f"Data parsing complete. Elapsed Time: {parse_files_elapsed_time:.2f} seconds"
     )
 
     clean_active_pin_df(active_pin_df, output_directory, data_rules_url)
 
 
 def run(input_directory, output_directory, data_rules_url):
+    """
+    Reads raw LTSA files to CSVs and writes them to output_directory. Writes processed and cleaned data to active_pin.csv.
+
+    Parameters:
+    - input_directory (str): Directory to read LTSA CSV files from.
+    - output_directory (str): Directory to write CSV files to.
+    - data_rules_url (str): URL to data_rules.json file hosted on github.
+
+    Returns:
+    - None
+    """
     start_time = time.time()
 
     if not os.path.exists(output_directory):

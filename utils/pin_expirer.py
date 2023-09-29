@@ -5,7 +5,16 @@ import time
 from datetime import datetime
 
 
-def create_expiration_file(input_directory):
+def create_expiration_df(input_directory):
+    """
+    Finds cancelled titles from LTSA 1_title.csv file, and writes titles to dataframe.
+
+    Parameters:
+    - input_directory (str): Directory to read LTSA 1_title.csv file from.
+
+    Returns:
+    - expired_titles_df (pd.Dataframe): Dataframe containing cancelled titles with columns title_number and title_status.
+    """
     # Read 1_title.csv
     title_df = pd.read_csv(
         input_directory + "1_title.csv",
@@ -18,7 +27,7 @@ def create_expiration_file(input_directory):
             "TTL_STTS_CD": str,
         },
     ).map(lambda x: x.strip() if isinstance(x, str) else x)
-    print("READ FILE----------------1_title.csv")
+    print("Read file: 1_title.csv")
 
     title_df.rename(
         columns={
@@ -35,6 +44,17 @@ def create_expiration_file(input_directory):
 
 
 def expire_pins(expired_titles_df, engine, expire_api_url):
+    """
+    Reads expired_titles_df. For each cancelled title, the database is queried for the corresponding live_pin_id(s). Then the Expire PIN API is called.
+
+    Parameters:
+    - expired_titles_df (pd.Dataframe): Dataframe containing cancelled titles with columns title_number and title_status.
+    - engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
+    - expire_api_url (str): Path for Expire PIN API endpoint.
+
+    Returns:
+    - None
+    """
     expired_title_list = list(expired_titles_df["title_number"])
 
     # Check if there are any cancelled titles
@@ -80,8 +100,24 @@ def run(
     user,
     password,
 ):
+    """
+    Finds cancelled titles from LTSA 1_title.csv file, and writes titles to dataframe. Reads expired_titles_df.
+    For each cancelled title, the database is queried for the corresponding live_pin_id(s). Then the Expire PIN API is called.
+
+    Parameters:
+    - input_directory (str): Directory to read LTSA 1_title.csv file from.
+    - expire_api_url (str): Path for Expire PIN API endpoint.
+    - database_name (str): The name of the PostgreSQL database.
+    - host (str, optional): The database host. Default is "localhost".
+    - port (int, optional): The database port. Default is 5432.
+    - user (str, optional): The database username. Default is "your_username".
+    - password (str, optional): The database password. Default is "your_password".
+
+    Returns:
+    - None
+    """
     try:
-        df = create_expiration_file(input_directory)
+        df = create_expiration_df(input_directory)
 
         # Create a connection to the PostgreSQL database
         conn_str = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
