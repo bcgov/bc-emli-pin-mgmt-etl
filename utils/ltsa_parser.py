@@ -165,6 +165,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
+        .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "TTL_STTS_CD"])
     )
     print("Read file: 1_title.csv")
 
@@ -192,6 +193,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
+        .dropna(subset=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"])
     )
     print("Read file: 2_parcel.csv")
 
@@ -212,6 +214,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
+        .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"])
     )
     print("Read file: 3_titleparcel.csv")
 
@@ -266,6 +269,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         .map(lambda x: x.strip() if isinstance(x, str) else x)
         .replace("", None)
         .replace(np.nan, None)
+        .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD"])
     )
     print("Read file: 4_titleowner.csv")
 
