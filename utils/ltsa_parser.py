@@ -34,7 +34,6 @@ def load_data_cleaning_rules(data_rules_url):
     response = requests.get(data_rules_url)
     if response.status_code == 200:
         data_cleaning = json.loads(response.text)
-        print(type(data_cleaning))
         return data_cleaning
     else:
         raise Exception(f"Failed to fetch data cleaning rules from {data_rules_url}")
