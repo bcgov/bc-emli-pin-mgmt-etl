@@ -63,6 +63,17 @@ def send_email_notification(
 
 
 def main():
+    """
+    Sets parser arguments and runs modules for ETL job:
+        - Download the SFTP files to the PVC
+        - Process the downloaded SFTP files and write to the output folder
+        - Write processed data to the PostgreSQL database
+        - Expire PINs of cancelled titles
+        - Send an email with the log file attachment regardless of success or error
+
+    Returns:
+    - None
+    """
     start_time = datetime.now().strftime("%a %d %b %Y, %I:%M%p")
 
     parser = argparse.ArgumentParser(

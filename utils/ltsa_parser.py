@@ -7,21 +7,51 @@ import os
 
 
 def pid_parser(pids):
+    """
+    Parses list of pids into string form.
+
+    Parameters:
+    - pids (list): List of parcel ids.
+
+    Returns:
+    - pids (str): String of pids in cleaned form.
+    """
     # Combine and format PIDs as a string
     return "|".join(sorted(set(map(str, pids))))
 
 
 def load_data_cleaning_rules(data_rules_url):
+    """
+    Loads content from data_rules.json file hosted on github.
+
+    Parameters:
+    - data_rules_url (str): URL to data_rules.json file hosted on github.
+
+    Returns:
+    - data_cleaning (dict): Dictionary of rules read from data_rules.json.
+    """
     # Load data cleaning rules from a JSON file hosted on GitHub
     response = requests.get(data_rules_url)
     if response.status_code == 200:
         data_cleaning = json.loads(response.text)
+        print(type(data_cleaning))
         return data_cleaning
     else:
         raise Exception(f"Failed to fetch data cleaning rules from {data_rules_url}")
 
 
 def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
+    """
+    Applies cleaning rules from data_rules_url to active_pin_df.
+
+    Parameters:
+    - active_pin_df (pd.Dataframe): The dataframe to be cleaned.
+    - output_directory (str): Directory to write active_pin.csv to.
+    - data_rules_url (str): URL to data_rules.json file hosted on github.
+
+    Returns:
+    - None
+    """
     # Load data cleaning rules from the specified GitHub URL
     data_cleaning_start_time = time.time()
 
@@ -99,6 +129,17 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
 
 
 def parse_ltsa_files(input_directory, output_directory, data_rules_url):
+    """
+    Reads raw LTSA files to CSVs and writes them to output_directory. Writes processed and cleaned data to active_pin.csv.
+
+    Parameters:
+    - input_directory (str): Directory to read LTSA CSV files from.
+    - output_directory (str): Directory to write CSV files to.
+    - data_rules_url (str): URL to data_rules.json file hosted on github.
+
+    Returns:
+    - None
+    """
     # Read, process, and write CSV files
     read_files_start_time = time.time()
 
@@ -306,6 +347,17 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
 
 
 def run(input_directory, output_directory, data_rules_url):
+    """
+    Reads raw LTSA files to CSVs and writes them to output_directory. Writes processed and cleaned data to active_pin.csv.
+
+    Parameters:
+    - input_directory (str): Directory to read LTSA CSV files from.
+    - output_directory (str): Directory to write CSV files to.
+    - data_rules_url (str): URL to data_rules.json file hosted on github.
+
+    Returns:
+    - None
+    """
     start_time = time.time()
 
     if not os.path.exists(output_directory):

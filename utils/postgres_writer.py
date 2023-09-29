@@ -8,6 +8,18 @@ import psycopg2, os
 def insert_postgres_table_if_rows_not_exist(
     dataframe, table_name, engine, unique_key_columns
 ):
+    """
+    Inserts non-duplicate rows into PostreSQL table in batches.
+
+    Parameters:
+    - dataframe (pd.DataFrame): The DataFrame to be written.
+    - table_name (str): The name of the PostgreSQL table.
+    - engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
+    - unique_key_columns (list): Columns that will prevent data insert on conflict.
+
+    Returns:
+    - None (or Error)
+    """
     try:
         # Create a list of column names as a comma-separated string
         column_names = ", ".join(dataframe.columns)
@@ -36,7 +48,17 @@ def insert_postgres_table_if_rows_not_exist(
         return f"Error: {str(e)}"
 
 
-def get_table_rows(table_name, engine):
+def get_row_count(table_name, engine):
+    """
+    Counts number of rows in database table.
+
+    Parameters:
+    - table_name (str): The name of the PostgreSQL table.
+    - engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
+
+    Returns:
+    - int:  The total number of rows in the table.
+    """
     query = select([func.count()]).select_from(text(table_name))
     conn = engine.connect()
     totalCount = conn.execute(query).fetchone()[0]
@@ -60,7 +82,7 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
     try:
         print(f"Updating table '{table_name}'...")  # Print the table being updated
 
-        rows_before_insert = get_table_rows(table_name, engine)
+        rows_before_insert = get_row_count(table_name, engine)
         dataframe = dataframe.replace(np.nan, "")
 
         # Split the dataframe into batches
@@ -80,7 +102,7 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
 
         print("Table updated")
 
-        rows_after_insert = get_table_rows(table_name, engine)
+        rows_after_insert = get_row_count(table_name, engine)
         total_rows_inserted = rows_after_insert - rows_before_insert
 
         return total_rows_inserted  # Return the total count of rows inserted
