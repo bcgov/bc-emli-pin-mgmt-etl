@@ -87,14 +87,14 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
         dataframe = dataframe.replace(np.nan, "")
 
         # Split the dataframe into batches
-        batch_list = [
+        batches = [
             dataframe[i : i + batch_size] for i in range(0, len(dataframe), batch_size)
         ]
 
         # Define the columns that make up the unique key --all columns
         unique_key_columns = dataframe.columns.tolist()
 
-        for batch in batch_list:
+        for batch in batches:
             update_response = insert_postgres_table_if_rows_not_exist(
                 batch, table_name, engine, unique_key_columns
             )
