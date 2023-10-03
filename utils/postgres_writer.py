@@ -19,7 +19,7 @@ def insert_postgres_table_if_rows_not_exist(
         unique_key_columns (list): Columns that will prevent data insert on conflict.
 
     Returns:
-        None (or Error)
+        None: when successful, Error (str): when not successful
     """
     try:
         column_names = ", ".join(dataframe.columns)
