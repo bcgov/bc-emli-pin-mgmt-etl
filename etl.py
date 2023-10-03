@@ -191,14 +191,14 @@ def main():
             downloader_start_time = time.time()
             print("------\nSTEP 1: DOWNLOADING LTSA FILES\n------")
 
-            # sftp_downloader.run(
-            #     host=args.sftp_host,
-            #     port=args.sftp_port,
-            #     username=args.sftp_username,
-            #     password=args.sftp_password,
-            #     remote_path=args.sftp_remote_path,
-            #     local_path=args.sftp_local_path,
-            # )
+            sftp_downloader.run(
+                host=args.sftp_host,
+                port=args.sftp_port,
+                username=args.sftp_username,
+                password=args.sftp_password,
+                remote_path=args.sftp_remote_path,
+                local_path=args.sftp_local_path,
+            )
 
             downloader_elapsed_time = time.time() - downloader_start_time
             print(
@@ -210,11 +210,11 @@ def main():
             parser_start_time = time.time()
             print("------\nSTEP 2: PARSING LTSA FILES\n------")
 
-            # ltsa_parser.run(
-            #     input_directory=args.sftp_local_path,
-            #     output_directory=args.processed_data_path,
-            #     data_rules_url=args.data_rules_url,
-            # )
+            ltsa_parser.run(
+                input_directory=args.sftp_local_path,
+                output_directory=args.processed_data_path,
+                data_rules_url=args.data_rules_url,
+            )
 
             parser_elapsed_time = time.time() - parser_start_time
             print(
@@ -247,15 +247,15 @@ def main():
             expier_start_time = time.time()
             print("------\nSTEP 4: EXPIRING PINS\n------")
 
-            # pin_expirer.run(
-            #     input_directory=args.sftp_local_path,
-            #     expire_api_url=args.expire_api_url,
-            #     database_name=args.db_name,
-            #     host=args.db_host,
-            #     port=args.db_port,
-            #     user=args.db_username,
-            #     password=args.db_password,
-            # )
+            pin_expirer.run(
+                input_directory=args.sftp_local_path,
+                expire_api_url=args.expire_api_url,
+                database_name=args.db_name,
+                host=args.db_host,
+                port=args.db_port,
+                user=args.db_username,
+                password=args.db_password,
+            )
 
             expier_elapsed_time = time.time() - expier_start_time
             print(
