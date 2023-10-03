@@ -178,6 +178,7 @@ def main():
 
         if file_name != args.sftp_remote_path:
             # Add entry to etl_log table
+            etl_log_start_time = time.time()
             print("------\nSTEP 0: CREATING ENTRY IN ETL_LOG TABLE\n------")
 
             insert_sql = f"INSERT INTO etl_log (file_name, job_status) VALUES ('{args.sftp_remote_path}', 'In Progress')"
@@ -186,13 +187,16 @@ def main():
                 conn.execute(text(insert_sql))
                 job_id = conn.execute(text(select_sql)).fetchone()[0]
 
-            print(f"------\nSTEP 0 COMPLETE: JOB_ID {job_id} ADDED TO ETL_LOG TABLE")
+            etl_log_elapsed_time = time.time() - etl_log_start_time
+
+            print(
+                f"------\nSTEP 0 COMPLETE: JOB_ID {job_id} ADDED TO ETL_LOG TABLE. Elapsed Time: {etl_log_elapsed_time:.2f} seconds"
+            )
 
             # Step 1: Download the SFTP files to the PVC
 
             downloader_start_time = time.time()
             print("------\nSTEP 1: DOWNLOADING LTSA FILES\n------")
-
             sftp_downloader.run(
                 host=args.sftp_host,
                 port=args.sftp_port,
