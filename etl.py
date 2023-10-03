@@ -11,6 +11,7 @@ from utils import (
 from utils.gc_notify import gc_notify_log
 from utils.logging_config import setup_logging
 import time
+from sqlalchemy import text, create_engine
 
 
 def send_email_notification(
@@ -160,19 +161,35 @@ def main():
         setup_logging(args.log_folder, log_filename)
         logger = logging.getLogger(__name__)
 
+        # Add entry to etl_log table
+
+        # Create a connection to the PostgreSQL database
+        conn_str = f"postgresql://{args.db_username}:{args.db_password}@{args.db_host}:{args.db_port}/{args.db_name}"
+        engine = create_engine(conn_str)
+
+        insert_sql = f"INSERT INTO etl_log (file_name, job_status) VALUES ('{args.sftp_remote_path}', 'In Progress')"
+        select_sql = (
+            f"SELECT job_id FROM etl_log WHERE file_name = '{args.sftp_remote_path}'"
+        )
+        with engine.begin() as conn:
+            conn.execute(text(insert_sql))
+            job_id = conn.execute(text(select_sql)).fetchone()[0]
+
+        print(job_id)
+
         # Step 1: Download the SFTP files to the PVC
 
         downloader_start_time = time.time()
         print("------\nSTEP 1: DOWNLOADING LTSA FILES\n------")
 
-        sftp_downloader.run(
-            host=args.sftp_host,
-            port=args.sftp_port,
-            username=args.sftp_username,
-            password=args.sftp_password,
-            remote_path=args.sftp_remote_path,
-            local_path=args.sftp_local_path,
-        )
+        # sftp_downloader.run(
+        #     host=args.sftp_host,
+        #     port=args.sftp_port,
+        #     username=args.sftp_username,
+        #     password=args.sftp_password,
+        #     remote_path=args.sftp_remote_path,
+        #     local_path=args.sftp_local_path,
+        # )
 
         downloader_elapsed_time = time.time() - downloader_start_time
         print(
@@ -184,11 +201,11 @@ def main():
         parser_start_time = time.time()
         print("------\nSTEP 2: PARSING LTSA FILES\n------")
 
-        ltsa_parser.run(
-            input_directory=args.sftp_local_path,
-            output_directory=args.processed_data_path,
-            data_rules_url=args.data_rules_url,
-        )
+        # ltsa_parser.run(
+        #     input_directory=args.sftp_local_path,
+        #     output_directory=args.processed_data_path,
+        #     data_rules_url=args.data_rules_url,
+        # )
 
         parser_elapsed_time = time.time() - parser_start_time
         print(
@@ -202,6 +219,7 @@ def main():
 
         postgres_writer.run(
             input_directory=args.processed_data_path,
+            etl_job_id=job_id,
             database_name=args.db_name,
             batch_size=args.db_write_batch_size,
             host=args.db_host,
@@ -220,25 +238,34 @@ def main():
         expier_start_time = time.time()
         print("------\nSTEP 4: EXPIRING PINS\n------")
 
-        pin_expirer.run(
-            input_directory=args.sftp_local_path,
-            expire_api_url=args.expire_api_url,
-            database_name=args.db_name,
-            host=args.db_host,
-            port=args.db_port,
-            user=args.db_username,
-            password=args.db_password,
-        )
+        # pin_expirer.run(
+        #     input_directory=args.sftp_local_path,
+        #     expire_api_url=args.expire_api_url,
+        #     database_name=args.db_name,
+        #     host=args.db_host,
+        #     port=args.db_port,
+        #     user=args.db_username,
+        #     password=args.db_password,
+        # )
 
         expier_elapsed_time = time.time() - expier_start_time
         print(
             f"------\nSTEP 4 COMPLETED: EXPIRED PINS. Elapsed Time: {expier_elapsed_time:.2f} seconds"
         )
 
+        # Update job status in etl_log table
+        alter_sql = f"UPDATE etl_log SET job_status = 'Pass' WHERE job_id = '{job_id}'"
+        with engine.begin() as conn:
+            conn.execute(text(alter_sql))
+
         logger.info("------\nETL JOB COMPLETED SUCCESSFULLY\n------")
 
     except Exception as e:
         logger.info(f"An error occurred: {str(e)}")
+
+        alter_sql = f"UPDATE etl_log SET job_status = 'Fail' WHERE job_id = '{job_id}'"
+        with engine.begin() as conn:
+            conn.execute(text(alter_sql))
 
     finally:
         personalisation = {
