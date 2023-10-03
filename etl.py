@@ -178,13 +178,15 @@ def main():
 
         if file_name != args.sftp_remote_path:
             # Add entry to etl_log table
+            print("------\nSTEP 0: CREATING ENTRY IN ETL_LOG TABLE\n------")
+
             insert_sql = f"INSERT INTO etl_log (file_name, job_status) VALUES ('{args.sftp_remote_path}', 'In Progress')"
             select_sql = f"SELECT job_id FROM etl_log WHERE file_name = '{args.sftp_remote_path}'"
             with engine.begin() as conn:
                 conn.execute(text(insert_sql))
                 job_id = conn.execute(text(select_sql)).fetchone()[0]
 
-            print(job_id)
+            print(f"------\nSTEP 0 COMPLETE: JOB_ID {job_id} ADDED TO ETL_LOG TABLE")
 
             # Step 1: Download the SFTP files to the PVC
 
