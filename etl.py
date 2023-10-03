@@ -161,104 +161,115 @@ def main():
         setup_logging(args.log_folder, log_filename)
         logger = logging.getLogger(__name__)
 
-        # Add entry to etl_log table
-
         # Create a connection to the PostgreSQL database
         conn_str = f"postgresql://{args.db_username}:{args.db_password}@{args.db_host}:{args.db_port}/{args.db_name}"
         engine = create_engine(conn_str)
 
-        insert_sql = f"INSERT INTO etl_log (file_name, job_status) VALUES ('{args.sftp_remote_path}', 'In Progress')"
+        # Check if file has already been run
         select_sql = (
-            f"SELECT job_id FROM etl_log WHERE file_name = '{args.sftp_remote_path}'"
+            f"SELECT file_name FROM etl_log WHERE file_name = '{args.sftp_remote_path}'"
         )
+
         with engine.begin() as conn:
-            conn.execute(text(insert_sql))
-            job_id = conn.execute(text(select_sql)).fetchone()[0]
+            file_name = conn.execute(text(select_sql)).fetchone()[0]
 
-        print(job_id)
+        if file_name != args.sftp_remote_path:
+            # Add entry to etl_log table
+            insert_sql = f"INSERT INTO etl_log (file_name, job_status) VALUES ('{args.sftp_remote_path}', 'In Progress')"
+            select_sql = f"SELECT job_id FROM etl_log WHERE file_name = '{args.sftp_remote_path}'"
+            with engine.begin() as conn:
+                conn.execute(text(insert_sql))
+                job_id = conn.execute(text(select_sql)).fetchone()[0]
 
-        # Step 1: Download the SFTP files to the PVC
+            print(job_id)
 
-        downloader_start_time = time.time()
-        print("------\nSTEP 1: DOWNLOADING LTSA FILES\n------")
+            # Step 1: Download the SFTP files to the PVC
 
-        # sftp_downloader.run(
-        #     host=args.sftp_host,
-        #     port=args.sftp_port,
-        #     username=args.sftp_username,
-        #     password=args.sftp_password,
-        #     remote_path=args.sftp_remote_path,
-        #     local_path=args.sftp_local_path,
-        # )
+            downloader_start_time = time.time()
+            print("------\nSTEP 1: DOWNLOADING LTSA FILES\n------")
 
-        downloader_elapsed_time = time.time() - downloader_start_time
-        print(
-            f"------\nSTEP 1 COMPLETED: DOWNLOADED LTSA FILES. Elapsed Time: {downloader_elapsed_time:.2f} seconds"
-        )
+            # sftp_downloader.run(
+            #     host=args.sftp_host,
+            #     port=args.sftp_port,
+            #     username=args.sftp_username,
+            #     password=args.sftp_password,
+            #     remote_path=args.sftp_remote_path,
+            #     local_path=args.sftp_local_path,
+            # )
 
-        # Step 2: Process the downloaded SFTP files and write to the output folder
+            downloader_elapsed_time = time.time() - downloader_start_time
+            print(
+                f"------\nSTEP 1 COMPLETED: DOWNLOADED LTSA FILES. Elapsed Time: {downloader_elapsed_time:.2f} seconds"
+            )
 
-        parser_start_time = time.time()
-        print("------\nSTEP 2: PARSING LTSA FILES\n------")
+            # Step 2: Process the downloaded SFTP files and write to the output folder
 
-        # ltsa_parser.run(
-        #     input_directory=args.sftp_local_path,
-        #     output_directory=args.processed_data_path,
-        #     data_rules_url=args.data_rules_url,
-        # )
+            parser_start_time = time.time()
+            print("------\nSTEP 2: PARSING LTSA FILES\n------")
 
-        parser_elapsed_time = time.time() - parser_start_time
-        print(
-            f"------\nSTEP 2 COMPLETED: PARSED LTSA FILES. Elapsed Time: {parser_elapsed_time:.2f} seconds"
-        )
+            # ltsa_parser.run(
+            #     input_directory=args.sftp_local_path,
+            #     output_directory=args.processed_data_path,
+            #     data_rules_url=args.data_rules_url,
+            # )
 
-        # Step 3: Write the above processed data to the PostgreSQL database
+            parser_elapsed_time = time.time() - parser_start_time
+            print(
+                f"------\nSTEP 2 COMPLETED: PARSED LTSA FILES. Elapsed Time: {parser_elapsed_time:.2f} seconds"
+            )
 
-        writer_start_time = time.time()
-        print("------\nSTEP 3: WRITING PARSED FILES TO DATABASE\n------")
+            # Step 3: Write the above processed data to the PostgreSQL database
 
-        postgres_writer.run(
-            input_directory=args.processed_data_path,
-            etl_job_id=job_id,
-            database_name=args.db_name,
-            batch_size=args.db_write_batch_size,
-            host=args.db_host,
-            port=args.db_port,
-            user=args.db_username,
-            password=args.db_password,
-        )
+            writer_start_time = time.time()
+            print("------\nSTEP 3: WRITING PARSED FILES TO DATABASE\n------")
 
-        writer_elapsed_time = time.time() - writer_start_time
-        print(
-            f"------\nSTEP 3 COMPLETED: WROTE PARSED FILES TO DATABASE. Elapsed Time: {writer_elapsed_time:.2f} seconds"
-        )
+            postgres_writer.run(
+                input_directory=args.processed_data_path,
+                etl_job_id=job_id,
+                database_name=args.db_name,
+                batch_size=args.db_write_batch_size,
+                host=args.db_host,
+                port=args.db_port,
+                user=args.db_username,
+                password=args.db_password,
+            )
 
-        # Step 4: Expire PINs of cancelled titles
+            writer_elapsed_time = time.time() - writer_start_time
+            print(
+                f"------\nSTEP 3 COMPLETED: WROTE PARSED FILES TO DATABASE. Elapsed Time: {writer_elapsed_time:.2f} seconds"
+            )
 
-        expier_start_time = time.time()
-        print("------\nSTEP 4: EXPIRING PINS\n------")
+            # Step 4: Expire PINs of cancelled titles
 
-        # pin_expirer.run(
-        #     input_directory=args.sftp_local_path,
-        #     expire_api_url=args.expire_api_url,
-        #     database_name=args.db_name,
-        #     host=args.db_host,
-        #     port=args.db_port,
-        #     user=args.db_username,
-        #     password=args.db_password,
-        # )
+            expier_start_time = time.time()
+            print("------\nSTEP 4: EXPIRING PINS\n------")
 
-        expier_elapsed_time = time.time() - expier_start_time
-        print(
-            f"------\nSTEP 4 COMPLETED: EXPIRED PINS. Elapsed Time: {expier_elapsed_time:.2f} seconds"
-        )
+            # pin_expirer.run(
+            #     input_directory=args.sftp_local_path,
+            #     expire_api_url=args.expire_api_url,
+            #     database_name=args.db_name,
+            #     host=args.db_host,
+            #     port=args.db_port,
+            #     user=args.db_username,
+            #     password=args.db_password,
+            # )
 
-        # Update job status in etl_log table
-        alter_sql = f"UPDATE etl_log SET job_status = 'Pass' WHERE job_id = '{job_id}'"
-        with engine.begin() as conn:
-            conn.execute(text(alter_sql))
+            expier_elapsed_time = time.time() - expier_start_time
+            print(
+                f"------\nSTEP 4 COMPLETED: EXPIRED PINS. Elapsed Time: {expier_elapsed_time:.2f} seconds"
+            )
 
-        logger.info("------\nETL JOB COMPLETED SUCCESSFULLY\n------")
+            # Update job status in etl_log table
+            alter_sql = (
+                f"UPDATE etl_log SET job_status = 'Pass' WHERE job_id = '{job_id}'"
+            )
+            with engine.begin() as conn:
+                conn.execute(text(alter_sql))
+
+            logger.info("------\nETL JOB COMPLETED SUCCESSFULLY\n------")
+
+        else:
+            print(f"------\nETL JOB NOT RUN: FILE ALREADY RAN\n------")
 
     except Exception as e:
         logger.info(f"An error occurred: {str(e)}")

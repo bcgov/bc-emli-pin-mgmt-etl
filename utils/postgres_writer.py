@@ -62,7 +62,6 @@ def get_row_count(table_name, engine):
     query = select([func.count()]).select_from(text(table_name))
     conn = engine.connect()
     totalCount = conn.execute(query).fetchone()[0]
-    print(query)  # Remove after debugging
     return totalCount
 
 
