@@ -171,7 +171,10 @@ def main():
         )
 
         with engine.begin() as conn:
-            file_name = conn.execute(text(select_sql)).fetchone()[0]
+            file_name = conn.execute(text(select_sql)).fetchone()
+            if file_name:
+                file_name = file_name[0]
+            print(file_name)
 
         if file_name != args.sftp_remote_path:
             # Add entry to etl_log table
