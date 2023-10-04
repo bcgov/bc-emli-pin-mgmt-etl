@@ -77,10 +77,14 @@ def find_elt_log(engine, folder_str):
     """
     select_sql = f"SELECT folder, status FROM etl_log WHERE folder = '{folder_str}'"
     with engine.begin() as conn:
-        result = conn.execute(text(select_sql)).fetchone()
+        result = conn.execute(text(select_sql)).fetchall()
         if result:
-            folder = result[0]
-            status = result[1]
+            if 'Success' in str(result):
+                folder = folder_str
+                status = 'Success'
+            else:
+                folder = result[0][0]
+                status = result[0][1]
         else:
             folder = None
             status = None
