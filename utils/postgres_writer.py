@@ -45,7 +45,7 @@ def insert_postgres_table_if_rows_not_exist(
             conn.execute(text(insert_sql))
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        raise e
 
 
 def get_row_count(table_name, engine):
@@ -59,10 +59,14 @@ def get_row_count(table_name, engine):
     Returns:
     - int:  The total number of rows in the table.
     """
-    query = select([func.count()]).select_from(text(table_name))
-    conn = engine.connect()
-    totalCount = conn.execute(query).fetchone()[0]
-    return totalCount
+    try:
+        query = select(func.count()).select_from(text(table_name))
+        conn = engine.connect()
+        totalCount = conn.execute(query).fetchone()[0]
+        return totalCount
+
+    except Exception as e:
+        raise e
 
 
 def write_dataframe_to_postgres(
@@ -113,8 +117,7 @@ def write_dataframe_to_postgres(
         return total_rows_inserted  # Return the total count of rows inserted
 
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return 0
+        raise e
 
 
 def run(
@@ -191,7 +194,8 @@ def run(
         )
 
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print(f"An error occurred writing files to database: {str(e)}")
+        raise e
 
 
 # Entry point of the script

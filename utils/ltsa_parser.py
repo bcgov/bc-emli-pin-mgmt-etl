@@ -51,80 +51,84 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
     Returns:
     - None
     """
-    # Load data cleaning rules from the specified GitHub URL
-    data_cleaning_start_time = time.time()
+    try:
+        # Load data cleaning rules from the specified GitHub URL
+        data_cleaning_start_time = time.time()
 
-    data_cleaning = load_data_cleaning_rules(data_rules_url)
+        data_cleaning = load_data_cleaning_rules(data_rules_url)
 
-    # Apply cleaning rules to each column
-    for column, rule in data_cleaning["column_rules"].items():
-        # Replace Exact Values - Looks for exact string match in column and replaces it with value
-        if "replace_exact_values" in rule.keys():
-            for replacement in rule["replace_exact_values"]:
-                active_pin_df[column] = active_pin_df[column].replace(
-                    rule["replace_exact_values"][replacement], replacement
+        # Apply cleaning rules to each column
+        for column, rule in data_cleaning["column_rules"].items():
+            # Replace Exact Values - Looks for exact string match in column and replaces it with value
+            if "replace_exact_values" in rule.keys():
+                for replacement in rule["replace_exact_values"]:
+                    active_pin_df[column] = active_pin_df[column].replace(
+                        rule["replace_exact_values"][replacement], replacement
+                    )
+
+            # Trim after comma
+            if "trim_after_comma" in rule.keys():
+                active_pin_df[column] = active_pin_df[column].apply(
+                    lambda x: x.split(",")[0] if isinstance(x, str) else x
                 )
 
-        # Trim after comma
-        if "trim_after_comma" in rule.keys():
-            active_pin_df[column] = active_pin_df[column].apply(
-                lambda x: x.split(",")[0] if isinstance(x, str) else x
-            )
+            # Remove Characters - Looks for strings containing character in column and removes character
+            if "remove_characters" in rule.keys():
+                for replacement in rule["remove_characters"]:
+                    active_pin_df[column] = (
+                        active_pin_df[column]
+                        .str.replace(replacement, "")
+                        .replace("  ", " ")
+                    )
 
-        # Remove Characters - Looks for strings containing character in column and removes character
-        if "remove_characters" in rule.keys():
-            for replacement in rule["remove_characters"]:
-                active_pin_df[column] = (
-                    active_pin_df[column]
-                    .str.replace(replacement, "")
-                    .replace("  ", " ")
+            # To uppercase
+            if "to_uppercase" in rule.keys():
+                active_pin_df[column] = active_pin_df[column].apply(
+                    lambda x: x.upper() if isinstance(x, str) else x
                 )
 
-        # To uppercase
-        if "to_uppercase" in rule.keys():
-            active_pin_df[column] = active_pin_df[column].apply(
-                lambda x: x.upper() if isinstance(x, str) else x
-            )
+            # Switch value from one column, from_column, to another, to_column
+            if "switch_column_value" in rule.keys():
+                from_column = rule["switch_column_value"]["from_column"]
+                to_column = rule["switch_column_value"]["to_column"]
 
-        # Switch value from one column, from_column, to another, to_column
-        if "switch_column_value" in rule.keys():
-            from_column = rule["switch_column_value"]["from_column"]
-            to_column = rule["switch_column_value"]["to_column"]
+                if "datatype" in rule["switch_column_value"]:
+                    datatype = rule["switch_column_value"]["datatype"]
+                    for value in active_pin_df[from_column]:
+                        if datatype == "int" and value and value.isdigit():
+                            active_pin_df[to_column] = np.where(
+                                (active_pin_df[from_column] == value),
+                                active_pin_df[from_column],
+                                active_pin_df[to_column],
+                            )
 
-            if "datatype" in rule["switch_column_value"]:
-                datatype = rule["switch_column_value"]["datatype"]
-                for value in active_pin_df[from_column]:
-                    if datatype == "int" and value and value.isdigit():
+                if "region_map" in rule["switch_column_value"]:
+                    region_map = rule["switch_column_value"]["region_map"]
+                    for replacement in region_map:
+                        active_pin_df[column] = active_pin_df[column].replace(
+                            region_map[replacement], replacement
+                        )
+
+                    for value in region_map.keys():
                         active_pin_df[to_column] = np.where(
                             (active_pin_df[from_column] == value),
                             active_pin_df[from_column],
                             active_pin_df[to_column],
                         )
 
-            if "region_map" in rule["switch_column_value"]:
-                region_map = rule["switch_column_value"]["region_map"]
-                for replacement in region_map:
-                    active_pin_df[column] = active_pin_df[column].replace(
-                        region_map[replacement], replacement
-                    )
+        print(f"Cleaning rules applied to file: active_pin.csv")
 
-                for value in region_map.keys():
-                    active_pin_df[to_column] = np.where(
-                        (active_pin_df[from_column] == value),
-                        active_pin_df[from_column],
-                        active_pin_df[to_column],
-                    )
+        active_pin_df = active_pin_df.drop(columns=["occupation", "parcel_status"])
 
-    print(f"Cleaning rules applied to file: active_pin.csv")
+        active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
 
-    active_pin_df = active_pin_df.drop(columns=["occupation", "parcel_status"])
+        data_cleaning_elapsed_time = time.time() - data_cleaning_start_time
+        print(
+            f"Wrote cleaned ltsa data to file: {output_directory+'active_pin.csv'}. Elapsed Time: {data_cleaning_elapsed_time:.2f} seconds"
+        )
 
-    active_pin_df.to_csv(output_directory + "active_pin.csv", index=False)
-
-    data_cleaning_elapsed_time = time.time() - data_cleaning_start_time
-    print(
-        f"Wrote cleaned ltsa data to file: {output_directory+'active_pin.csv'}. Elapsed Time: {data_cleaning_elapsed_time:.2f} seconds"
-    )
+    except Exception as e:
+        raise e(f"Failed to clean active_pin dataframe")
 
 
 def parse_ltsa_files(input_directory, output_directory, data_rules_url):
@@ -139,214 +143,226 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     Returns:
     - None
     """
-    # Read, process, and write CSV files
-    read_files_start_time = time.time()
+    try:
+        # Read, process, and write CSV files
+        read_files_start_time = time.time()
 
-    # 1_title.csv
-    title_df = (
-        pd.read_csv(
-            input_directory + "1_title.csv",
-            usecols=[
-                "TITLE_NMBR",
-                "LTB_DISTRICT_CD",
-                "TTL_STTS_CD",
-                "FRM_TTL_NMBR",
-                "FRM_LT_DISTRICT_CD",
-            ],
-            dtype={
-                "TITLE_NMBR": str,
-                "LTB_DISTRICT_CD": str,
-                "TTL_STTS_CD": str,
-                "FRM_TTL_NMBR": str,
-                "FRM_LT_DISTRICT_CD": str,
+        # 1_title.csv
+        title_df = (
+            pd.read_csv(
+                input_directory + "1_title.csv",
+                usecols=[
+                    "TITLE_NMBR",
+                    "LTB_DISTRICT_CD",
+                    "TTL_STTS_CD",
+                    "FRM_TTL_NMBR",
+                    "FRM_LT_DISTRICT_CD",
+                ],
+                dtype={
+                    "TITLE_NMBR": str,
+                    "LTB_DISTRICT_CD": str,
+                    "TTL_STTS_CD": str,
+                    "FRM_TTL_NMBR": str,
+                    "FRM_LT_DISTRICT_CD": str,
+                },
+            )
+            .map(lambda x: x.strip() if isinstance(x, str) else x)
+            .replace("", None)
+            .replace(np.nan, None)
+            .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "TTL_STTS_CD"])
+        )
+        print("Read file: 1_title.csv")
+
+        title_df.rename(
+            columns={
+                "TITLE_NMBR": "title_number",
+                "LTB_DISTRICT_CD": "land_title_district",
+                "TTL_STTS_CD": "title_status",
+                "FRM_TTL_NMBR": "from_title_number",
+                "FRM_LT_DISTRICT_CD": "from_land_title_district",
             },
+            inplace=True,
         )
-        .map(lambda x: x.strip() if isinstance(x, str) else x)
-        .replace("", None)
-        .replace(np.nan, None)
-        .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "TTL_STTS_CD"])
-    )
-    print("Read file: 1_title.csv")
 
-    title_df.rename(
-        columns={
-            "TITLE_NMBR": "title_number",
-            "LTB_DISTRICT_CD": "land_title_district",
-            "TTL_STTS_CD": "title_status",
-            "FRM_TTL_NMBR": "from_title_number",
-            "FRM_LT_DISTRICT_CD": "from_land_title_district",
-        },
-        inplace=True,
-    )
+        title_df.to_csv(output_directory + "title_raw.csv", index=False)
+        print(f"Wrote raw ltsa data to file: {output_directory+'title_raw.csv'}")
 
-    title_df.to_csv(output_directory + "title_raw.csv", index=False)
-    print(f"Wrote raw ltsa data to file: {output_directory+'title_raw.csv'}")
-
-    # 2_parcel.csv
-    parcel_df = (
-        pd.read_csv(
-            input_directory + "2_parcel.csv",
-            usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
-            dtype={"PRMNNT_PRCL_ID": int, "PRCL_STTS_CD": str},
+        # 2_parcel.csv
+        parcel_df = (
+            pd.read_csv(
+                input_directory + "2_parcel.csv",
+                usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
+                dtype={"PRMNNT_PRCL_ID": int, "PRCL_STTS_CD": str},
+            )
+            .map(lambda x: x.strip() if isinstance(x, str) else x)
+            .replace("", None)
+            .replace(np.nan, None)
+            .dropna(subset=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"])
         )
-        .map(lambda x: x.strip() if isinstance(x, str) else x)
-        .replace("", None)
-        .replace(np.nan, None)
-        .dropna(subset=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"])
-    )
-    print("Read file: 2_parcel.csv")
+        print("Read file: 2_parcel.csv")
 
-    parcel_df = parcel_df.rename(
-        columns={"PRMNNT_PRCL_ID": "pid", "PRCL_STTS_CD": "parcel_status"}
-    )
-
-    parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
-    print(f"Wrote raw LTSA data to file: {output_directory+'parcel_raw.csv'}")
-
-    # 3_titleparcel.csv
-    title_parcel_df = (
-        pd.read_csv(
-            input_directory + "3_titleparcel.csv",
-            usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
-            dtype={"TITLE_NMBR": str, "LTB_DISTRICT_CD": str, "PRMNNT_PRCL_ID": int},
+        parcel_df = parcel_df.rename(
+            columns={"PRMNNT_PRCL_ID": "pid", "PRCL_STTS_CD": "parcel_status"}
         )
-        .map(lambda x: x.strip() if isinstance(x, str) else x)
-        .replace("", None)
-        .replace(np.nan, None)
-        .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"])
-    )
-    print("Read file: 3_titleparcel.csv")
 
-    title_parcel_df = title_parcel_df.rename(
-        columns={
-            "TITLE_NMBR": "title_number",
-            "LTB_DISTRICT_CD": "land_title_district",
-            "PRMNNT_PRCL_ID": "pid",
-        }
-    )
+        parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
+        print(f"Wrote raw LTSA data to file: {output_directory+'parcel_raw.csv'}")
 
-    title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
-    print(f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}")
-
-    # 4_titleowner.csv
-    title_owner_df = (
-        pd.read_csv(
-            input_directory + "4_titleowner.csv",
-            usecols=[
-                "TITLE_NMBR",
-                "LTB_DISTRICT_CD",
-                "CLIENT_GVN_NM",
-                "CLIENT_LST_NM_1",
-                "CLIENT_LST_NM_2",
-                "OCCPTN_DESC",
-                "INCRPRTN_NMBR",
-                "ADDRS_DESC_1",
-                "ADDRS_DESC_2",
-                "ADDRS_CITY",
-                "ADDRS_PROV_CD",
-                "ADDRS_PROV_ST",
-                "ADDRS_CNTRY",
-                "ADDRS_PSTL_CD",
-            ],
-            dtype={
-                "TITLE_NMBR": str,
-                "LTB_DISTRICT_CD": str,
-                "CLIENT_GVN_NM": str,
-                "CLIENT_LST_NM_1": str,
-                "CLIENT_LST_NM_2": str,
-                "OCCPTN_DESC": str,
-                "INCRPRTN_NMBR": str,
-                "ADDRS_DESC_1": str,
-                "ADDRS_DESC_2": str,
-                "ADDRS_CITY": str,
-                "ADDRS_PROV_CD": str,
-                "ADDRS_PROV_ST": str,
-                "ADDRS_CNTRY": str,
-                "ADDRS_PSTL_CD": str,
-            },
+        # 3_titleparcel.csv
+        title_parcel_df = (
+            pd.read_csv(
+                input_directory + "3_titleparcel.csv",
+                usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
+                dtype={
+                    "TITLE_NMBR": str,
+                    "LTB_DISTRICT_CD": str,
+                    "PRMNNT_PRCL_ID": int,
+                },
+            )
+            .map(lambda x: x.strip() if isinstance(x, str) else x)
+            .replace("", None)
+            .replace(np.nan, None)
+            .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"])
         )
-        .map(lambda x: x.strip() if isinstance(x, str) else x)
-        .replace("", None)
-        .replace(np.nan, None)
-        .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD"])
-    )
-    print("Read file: 4_titleowner.csv")
+        print("Read file: 3_titleparcel.csv")
 
-    title_owner_df = title_owner_df.rename(
-        columns={
-            "TITLE_NMBR": "title_number",
-            "LTB_DISTRICT_CD": "land_title_district",
-            "CLIENT_GVN_NM": "given_name",
-            "CLIENT_LST_NM_1": "last_name_1",
-            "CLIENT_LST_NM_2": "last_name_2",
-            "OCCPTN_DESC": "occupation",
-            "INCRPRTN_NMBR": "incorporation_number",
-            "ADDRS_DESC_1": "address_line_1",
-            "ADDRS_DESC_2": "address_line_2",
-            "ADDRS_CITY": "city",
-            "ADDRS_PROV_CD": "province_abbreviation",
-            "ADDRS_PROV_ST": "province_long",
-            "ADDRS_CNTRY": "country",
-            "ADDRS_PSTL_CD": "postal_code",
-        }
-    )
+        title_parcel_df = title_parcel_df.rename(
+            columns={
+                "TITLE_NMBR": "title_number",
+                "LTB_DISTRICT_CD": "land_title_district",
+                "PRMNNT_PRCL_ID": "pid",
+            }
+        )
 
-    title_owner_df.to_csv(output_directory + "titleowner_raw.csv", index=False)
+        title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
+        print(f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}")
 
-    read_files_elapsed_time = time.time() - read_files_start_time
+        # 4_titleowner.csv
+        title_owner_df = (
+            pd.read_csv(
+                input_directory + "4_titleowner.csv",
+                usecols=[
+                    "TITLE_NMBR",
+                    "LTB_DISTRICT_CD",
+                    "CLIENT_GVN_NM",
+                    "CLIENT_LST_NM_1",
+                    "CLIENT_LST_NM_2",
+                    "OCCPTN_DESC",
+                    "INCRPRTN_NMBR",
+                    "ADDRS_DESC_1",
+                    "ADDRS_DESC_2",
+                    "ADDRS_CITY",
+                    "ADDRS_PROV_CD",
+                    "ADDRS_PROV_ST",
+                    "ADDRS_CNTRY",
+                    "ADDRS_PSTL_CD",
+                ],
+                dtype={
+                    "TITLE_NMBR": str,
+                    "LTB_DISTRICT_CD": str,
+                    "CLIENT_GVN_NM": str,
+                    "CLIENT_LST_NM_1": str,
+                    "CLIENT_LST_NM_2": str,
+                    "OCCPTN_DESC": str,
+                    "INCRPRTN_NMBR": str,
+                    "ADDRS_DESC_1": str,
+                    "ADDRS_DESC_2": str,
+                    "ADDRS_CITY": str,
+                    "ADDRS_PROV_CD": str,
+                    "ADDRS_PROV_ST": str,
+                    "ADDRS_CNTRY": str,
+                    "ADDRS_PSTL_CD": str,
+                },
+            )
+            .map(lambda x: x.strip() if isinstance(x, str) else x)
+            .replace("", None)
+            .replace(np.nan, None)
+            .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD"])
+        )
+        print("Read file: 4_titleowner.csv")
 
-    print(
-        f"Wrote raw LTSA data to file: {output_directory+'titleowner_raw.csv'}. Elapsed Time: {read_files_elapsed_time:.2f} seconds"
-    )
+        title_owner_df = title_owner_df.rename(
+            columns={
+                "TITLE_NMBR": "title_number",
+                "LTB_DISTRICT_CD": "land_title_district",
+                "CLIENT_GVN_NM": "given_name",
+                "CLIENT_LST_NM_1": "last_name_1",
+                "CLIENT_LST_NM_2": "last_name_2",
+                "OCCPTN_DESC": "occupation",
+                "INCRPRTN_NMBR": "incorporation_number",
+                "ADDRS_DESC_1": "address_line_1",
+                "ADDRS_DESC_2": "address_line_2",
+                "ADDRS_CITY": "city",
+                "ADDRS_PROV_CD": "province_abbreviation",
+                "ADDRS_PROV_ST": "province_long",
+                "ADDRS_CNTRY": "country",
+                "ADDRS_PSTL_CD": "postal_code",
+            }
+        )
 
-    # Join dataframes
-    parse_files_start_time = time.time()
+        title_owner_df.to_csv(output_directory + "titleowner_raw.csv", index=False)
 
-    title_titleowner_df = pd.merge(
-        title_owner_df, title_df, on=["title_number", "land_title_district"]
-    )
-    print("Dataframes merged: title_owner_df, title_df")
-    print(f"Number of rows in title_titleowner_df: {len(title_titleowner_df)}")
+        read_files_elapsed_time = time.time() - read_files_start_time
 
-    titleparcel_parcel_df = pd.merge(title_parcel_df, parcel_df, on="pid")
-    print("Dataframes merged: title_parcel_df, parcel_df")
-    print(f"Number of rows in titleparcel_parcel_df: {len(titleparcel_parcel_df)}")
+        print(
+            f"Wrote raw LTSA data to file: {output_directory+'titleowner_raw.csv'}. Elapsed Time: {read_files_elapsed_time:.2f} seconds"
+        )
 
-    active_pin_df = pd.merge(
-        title_titleowner_df,
-        titleparcel_parcel_df,
-        on=["title_number", "land_title_district"],
-    )
-    print("Dataframes merged: title_titleowner_df, titleparcel_parcel_df")
-    print(f"Number of rows in active_pin_df: {len(active_pin_df)}")
+        # Join dataframes
+        parse_files_start_time = time.time()
 
-    # Group by title number to get a list of active pids associated with each title
-    titlenumber_pids_df = (
-        active_pin_df.groupby(["title_number", "land_title_district"])["pid"]
-        .apply(list)
-        .reset_index(name="pids")
-    )
-    print("Grouped dataframe created: titlenumber_pids_df")
+        title_titleowner_df = pd.merge(
+            title_owner_df, title_df, on=["title_number", "land_title_district"]
+        )
+        print("Dataframes merged: title_owner_df, title_df")
+        print(f"Number of rows in title_titleowner_df: {len(title_titleowner_df)}")
 
-    # Format PIDs as strings
-    titlenumber_pids_df["pids"] = titlenumber_pids_df["pids"].apply(pid_parser)
+        titleparcel_parcel_df = pd.merge(title_parcel_df, parcel_df, on="pid")
+        print("Dataframes merged: title_parcel_df, parcel_df")
+        print(f"Number of rows in titleparcel_parcel_df: {len(titleparcel_parcel_df)}")
 
-    # Merge dataframes to add in PIDs column and drop duplicate rows
-    active_pin_df = pd.merge(
-        active_pin_df, titlenumber_pids_df, on=["title_number", "land_title_district"]
-    ).drop(columns=["pid"])
-    print("Dataframes merged: active_pin_df, titlenumber_pids_df")
+        active_pin_df = pd.merge(
+            title_titleowner_df,
+            titleparcel_parcel_df,
+            on=["title_number", "land_title_district"],
+        )
+        print("Dataframes merged: title_titleowner_df, titleparcel_parcel_df")
+        print(f"Number of rows in active_pin_df: {len(active_pin_df)}")
 
-    # Remove duplicate rows
-    active_pin_df = active_pin_df.loc[active_pin_df.astype(str).drop_duplicates().index]
-    print("Duplicate rows dropped: active_pin_df")
+        # Group by title number to get a list of active pids associated with each title
+        titlenumber_pids_df = (
+            active_pin_df.groupby(["title_number", "land_title_district"])["pid"]
+            .apply(list)
+            .reset_index(name="pids")
+        )
+        print("Grouped dataframe created: titlenumber_pids_df")
 
-    parse_files_elapsed_time = time.time() - parse_files_start_time
-    print(
-        f"Data parsing complete. Elapsed Time: {parse_files_elapsed_time:.2f} seconds"
-    )
+        # Format PIDs as strings
+        titlenumber_pids_df["pids"] = titlenumber_pids_df["pids"].apply(pid_parser)
 
-    clean_active_pin_df(active_pin_df, output_directory, data_rules_url)
+        # Merge dataframes to add in PIDs column and drop duplicate rows
+        active_pin_df = pd.merge(
+            active_pin_df,
+            titlenumber_pids_df,
+            on=["title_number", "land_title_district"],
+        ).drop(columns=["pid"])
+        print("Dataframes merged: active_pin_df, titlenumber_pids_df")
+
+        # Remove duplicate rows
+        active_pin_df = active_pin_df.loc[
+            active_pin_df.astype(str).drop_duplicates().index
+        ]
+        print("Duplicate rows dropped: active_pin_df")
+
+        parse_files_elapsed_time = time.time() - parse_files_start_time
+        print(
+            f"Data parsing complete. Elapsed Time: {parse_files_elapsed_time:.2f} seconds"
+        )
+
+        clean_active_pin_df(active_pin_df, output_directory, data_rules_url)
+
+    except Exception as e:
+        raise e
 
 
 def run(input_directory, output_directory, data_rules_url):
@@ -361,18 +377,25 @@ def run(input_directory, output_directory, data_rules_url):
     Returns:
     - None
     """
-    start_time = time.time()
+    try:
+        start_time = time.time()
 
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
 
-    # Parse the files
-    parse_ltsa_files(input_directory, output_directory, data_rules_url)
+        # Parse the files
+        parse_ltsa_files(input_directory, output_directory, data_rules_url)
 
-    end_time = time.time()
-    total_time = end_time - start_time
+        end_time = time.time()
+        total_time = end_time - start_time
 
-    print(f"All files parsed and cleaned. Total time elapsed: {total_time:.2f} seconds")
+        print(
+            f"All files parsed and cleaned. Total time elapsed: {total_time:.2f} seconds"
+        )
+
+    except Exception as e:
+        print(f"Error parsing LTSA data: {str(e)}")
+        raise e
 
 
 if __name__ == "__main__":

@@ -13,34 +13,40 @@ def create_expiration_df(input_directory):
     - input_directory (str): Directory to read LTSA 1_title.csv file from.
 
     Returns:
-    - expired_titles_df (pd.Dataframe): Dataframe containing cancelled titles with columns title_number and title_status.
+    - cancelled_titles_df (pd.Dataframe): Dataframe containing cancelled titles with columns title_number and title_status.
     """
-    # Read 1_title.csv
-    title_df = pd.read_csv(
-        input_directory + "1_title.csv",
-        usecols=[
-            "TITLE_NMBR",
-            "TTL_STTS_CD",
-        ],
-        dtype={
-            "TITLE_NMBR": str,
-            "TTL_STTS_CD": str,
-        },
-    ).map(lambda x: x.strip() if isinstance(x, str) else x)
-    print("Read file: 1_title.csv")
+    try:
+        # Read 1_title.csv
+        title_df = pd.read_csv(
+            input_directory + "1_title.csv",
+            usecols=[
+                "TITLE_NMBR",
+                "TTL_STTS_CD",
+            ],
+            dtype={
+                "TITLE_NMBR": str,
+                "TTL_STTS_CD": str,
+            },
+        ).map(lambda x: x.strip() if isinstance(x, str) else x)
+        print("Read file: 1_title.csv")
 
-    title_df.rename(
-        columns={
-            "TITLE_NMBR": "title_number",
-            "TTL_STTS_CD": "title_status",
-        },
-        inplace=True,
-    )
+        title_df.rename(
+            columns={
+                "TITLE_NMBR": "title_number",
+                "TTL_STTS_CD": "title_status",
+            },
+            inplace=True,
+        )
 
-    # Drop active titles
-    expired_titles_df = title_df.drop(title_df[title_df["title_status"] != "C"].index)
+        # Drop active titles
+        cancelled_titles_df = title_df.drop(
+            title_df[title_df["title_status"] != "C"].index
+        )
 
-    return expired_titles_df
+        return cancelled_titles_df
+
+    except Exception as e:
+        raise e
 
 
 def expire_pins(expired_titles_df, engine, expire_api_url):
@@ -55,40 +61,44 @@ def expire_pins(expired_titles_df, engine, expire_api_url):
     Returns:
     - None
     """
-    expired_title_list = list(expired_titles_df["title_number"])
+    try:
+        expired_title_list = list(expired_titles_df["title_number"])
 
-    # Check if there are any cancelled titles
-    if len(expired_title_list) > 0:
-        title_number_string = (
-            str(expired_title_list).replace("[", "(").replace("]", ")")
-        )
-        # Find live_pin_id for each cancelled title
-        query = f"SELECT live_pin_id, title_number FROM active_pin WHERE title_number IN {title_number_string}"
-        expired_rows_df = pd.read_sql(query, engine)
+        # Check if there are any cancelled titles
+        if len(expired_title_list) > 0:
+            title_number_string = (
+                str(expired_title_list).replace("[", "(").replace("]", ")")
+            )
+            # Find live_pin_id for each cancelled title
+            query = f"SELECT live_pin_id, title_number FROM active_pin WHERE title_number IN {title_number_string}"
+            expired_rows_df = pd.read_sql(query, engine)
 
-        # Call expire pin api for each title in expired_titles.csv
-        for live_pin_id in expired_rows_df["live_pin_id"]:
-            try:
-                live_pin_id = str(live_pin_id)
-                data = {
-                    "livePinId": live_pin_id,
-                    "expirationReason": "CO",
-                }
-                requests.post(url=expire_api_url, json=data)
+            # Call expire pin api for each title in expired_titles.csv
+            for live_pin_id in expired_rows_df["live_pin_id"]:
+                try:
+                    live_pin_id = str(live_pin_id)
+                    data = {
+                        "livePinId": live_pin_id,
+                        "expirationReason": "CO",
+                    }
+                    requests.post(url=expire_api_url, json=data)
 
-            except Exception as e:
-                print(f"An error occurred calling Expire PIN API: {str(e)}")
+                except Exception as e:
+                    print(f"An error occurred calling Expire PIN API: {str(e)}")
 
-        total_pins_expired = len(expired_rows_df["live_pin_id"])
+            total_pins_expired = len(expired_rows_df["live_pin_id"])
 
-        print(
-            f"Expired PINs of cancelled titles, {total_pins_expired} pins expired, timestamp: {datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        )
+            print(
+                f"Expired PINs of cancelled titles, {total_pins_expired} pins expired, timestamp: {datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
 
-    else:
-        print(
-            f"No PINs to expire, timestamp: {datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        )
+        else:
+            print(
+                f"No PINs to expire, timestamp: {datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
+
+    except Exception as e:
+        raise e
 
 
 def run(
@@ -133,7 +143,8 @@ def run(
         print(f"Elapsed Time: {elapsed_time:.2f} seconds")
 
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print(f"An error occurred expiring PINs: {str(e)}")
+        raise e
 
 
 if __name__ == "__main__":

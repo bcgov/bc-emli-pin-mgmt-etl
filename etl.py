@@ -150,6 +150,7 @@ def main():
         None
     """
     start_time = datetime.now().strftime("%a %d %b %Y, %I:%M%p")
+    ran = False
 
     parser = argparse.ArgumentParser(
         prog="BC PVS ETL Job",
@@ -243,6 +244,7 @@ def main():
         folder, status = find_elt_log(engine, args.sftp_remote_path)
 
         if not folder or status != "Success":
+            ran = True
             # Add entry to etl_log table
             etl_log_start_time = time.time()
             print("------\nSTEP 0: CREATING ENTRY IN ETL_LOG TABLE\n------")
@@ -339,34 +341,40 @@ def main():
 
             logger.info("------\nETL JOB COMPLETED SUCCESSFULLY\n------")
 
+            personalisation = {
+                "start_time": start_time,
+                "status": "Success",
+                "message": "ETL job completed successfully",
+            }
+
         else:
             print(f"------\nETL JOB NOT RUN: FILE ALREADY RAN\n------")
 
     except Exception as e:
+        personalisation = {
+            "start_time": start_time,
+            "status": "Failure",
+            "message": str(e),
+        }
+
         logger.info(f"An error occurred: {str(e)}")
         update_tables_on_failure(engine, job_id)
 
     finally:
-        personalisation = {
-            "start_time": start_time,
-            "status": "Success" if "e" not in locals() else "Failure",
-            "message": str(e) if "e" in locals() else "ETL job completed successfully",
-        }
-
-        logger.info(personalisation)
-
         # Send an email with the log file attachment regardless of success or error
-        send_email_notification(
-            args.api_key,
-            args.base_url,
-            args.email_address,
-            args.template_id,
-            args.log_folder,
-            log_filename,
-            personalisation["start_time"],
-            personalisation["status"],
-            personalisation["message"],
-        )
+        if ran:
+            logger.info(personalisation)
+            send_email_notification(
+                args.api_key,
+                args.base_url,
+                args.email_address,
+                args.template_id,
+                args.log_folder,
+                log_filename,
+                personalisation["start_time"],
+                personalisation["status"],
+                personalisation["message"],
+            )
 
 
 if __name__ == "__main__":
