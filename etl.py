@@ -79,9 +79,9 @@ def find_elt_log(engine, folder_str):
     with engine.begin() as conn:
         result = conn.execute(text(select_sql)).fetchall()
         if result:
-            if 'Success' in str(result):
+            if "Success" in str(result):
                 folder = folder_str
-                status = 'Success'
+                status = "Success"
             else:
                 folder = result[0][0]
                 status = result[0][1]
