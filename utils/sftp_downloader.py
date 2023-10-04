@@ -14,12 +14,16 @@ def set_sftp_conn(host, port, username, password):
     Returns:
         paramiko.SFTPClient: An SFTP client object.
     """
-    transport = paramiko.Transport((host, port))
-    print("Connecting to SFTP...")
-    transport.connect(username=username, password=password)
-    sftp = paramiko.SFTPClient.from_transport(transport)
-    print("Connection established...")
-    return sftp
+    try:
+        transport = paramiko.Transport((host, port))
+        print("Connecting to SFTP...")
+        transport.connect(username=username, password=password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        print("Connection established...")
+        return sftp
+
+    except Exception as e:
+        raise e
 
 
 def get_files_to_download_from_sftp(sftp, remote_path):
@@ -33,10 +37,13 @@ def get_files_to_download_from_sftp(sftp, remote_path):
     Returns:
         list of str: A list of filenames to download.
     """
-    files_to_download = sftp.listdir(remote_path)
-    if not files_to_download:
-        print("No new files uploaded...")
-    return files_to_download
+    try:
+        files_to_download = sftp.listdir(remote_path)
+        if not files_to_download:
+            print("No new files uploaded...")
+        return files_to_download
+    except Exception as e:
+        raise e
 
 
 def download_files_from_sftp(sftp, files_list, remote_path, local_path):
@@ -49,11 +56,15 @@ def download_files_from_sftp(sftp, files_list, remote_path, local_path):
         remote_path (str): The remote directory path on the SFTP server.
         local_path (str): The local directory path where files will be downloaded.
     """
-    for file in files_list:
-        remote_file_path = remote_path + file
-        local_file_path = local_path + file
-        sftp.get(remote_file_path, local_file_path)
-        print(f"Downloaded: {remote_file_path} -> {local_file_path}")
+    try:
+        for file in files_list:
+            remote_file_path = remote_path + file
+            local_file_path = local_path + file
+            sftp.get(remote_file_path, local_file_path)
+            print(f"Downloaded: {remote_file_path} -> {local_file_path}")
+
+    except Exception as e:
+        raise e
 
 
 def run(host, port, username, password, remote_path, local_path):
@@ -68,13 +79,18 @@ def run(host, port, username, password, remote_path, local_path):
         remote_path (str): The remote directory path on the SFTP server.
         local_path (str): The local directory path where files will be downloaded.
     """
-    # Establish SFTP connection
-    sftp_conn = set_sftp_conn(host, port, username, password)
+    try:
+        # Establish SFTP connection
+        sftp_conn = set_sftp_conn(host, port, username, password)
 
-    files_to_download = get_files_to_download_from_sftp(sftp_conn, remote_path)
+        files_to_download = get_files_to_download_from_sftp(sftp_conn, remote_path)
 
-    # Download the files
-    download_files_from_sftp(sftp_conn, files_to_download, remote_path, local_path)
+        # Download the files
+        download_files_from_sftp(sftp_conn, files_to_download, remote_path, local_path)
+
+    except Exception as e:
+        print(f"Error downloding LTSA files: {str(e)}")
+        raise e
 
 
 if __name__ == "__main__":
