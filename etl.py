@@ -63,6 +63,76 @@ def send_email_notification(
         print(f"Error sending email notification: {str(e)}")
 
 
+def find_elt_log(engine, folder_str):
+    """
+    Find folder and status where folder is latest data folder from LTSA.
+
+    Args:
+        folder_str (str): Latest data folder name from LTSA.
+        engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
+
+    Returns:
+        folder (str): Name of folder in etl_log table OR (None): If folder is not already in etl_log table.
+        status (str): Status from etl_log table OR (None): If folder is not already in etl_log table.
+    """
+    select_sql = f"SELECT folder, status FROM etl_log WHERE folder = '{folder_str}'"
+    with engine.begin() as conn:
+        result = conn.execute(text(select_sql)).fetchone()
+        if result:
+            folder = result[0]
+            status = result[1]
+        else:
+            folder = None
+            status = None
+    return folder, status
+
+
+def insert_etl_log(folder_str, engine):
+    """
+    Insert new entry into etl_log table with a status of in progress.
+
+    Args:
+        folder_str (str): Folder name to be inserted.
+        engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
+
+    Returns:
+        job_id (UUID): Job_id from etl_log table.
+    """
+    insert_sql = (
+        f"INSERT INTO etl_log (folder, status) VALUES ('{folder_str}', 'In Progress')"
+    )
+    select_sql = f"SELECT job_id FROM etl_log WHERE folder = '{folder_str}' AND status = 'In Progress'"
+    with engine.begin() as conn:
+        conn.execute(text(insert_sql))
+        job_id = conn.execute(text(select_sql)).fetchone()[0]
+    return job_id
+
+
+def update_tables_on_failure(engine, job_id):
+    """
+    Update etl_log table and raw tables on failure.
+    Update etl_log table status to 'Failure' and drop associated data from raw tables using foreign key, etl_log_id.
+
+    Args:
+        engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
+        job_id (UUID): Job_id from etl_log table.
+
+    Returns:
+        None
+    """
+    alter_sql = f"UPDATE etl_log SET status = 'Failure' WHERE job_id = '{job_id}'"
+    delete_sql = f"""
+        DELETE FROM title_raw WHERE etl_log_id = '{job_id}';
+        DELETE FROM parcel_raw WHERE etl_log_id = '{job_id}';
+        DELETE FROM titleparcel_raw WHERE etl_log_id = '{job_id}';
+        DELETE FROM titleowner_raw WHERE etl_log_id = '{job_id}';
+    """
+
+    with engine.begin() as conn:
+        conn.execute(text(alter_sql))
+        conn.execute(text(delete_sql))
+
+
 def main():
     """
     Sets parser arguments and runs modules for ETL job:
@@ -73,7 +143,7 @@ def main():
         - Send an email with the log file attachment regardless of success or error
 
     Returns:
-    - None
+        None
     """
     start_time = datetime.now().strftime("%a %d %b %Y, %I:%M%p")
 
@@ -166,31 +236,19 @@ def main():
         engine = create_engine(conn_str)
 
         # Check if file has already been run
-        select_sql = (
-            f"SELECT file_name FROM etl_log WHERE file_name = '{args.sftp_remote_path}'"
-        )
+        folder, status = find_elt_log(engine, args.sftp_remote_path)
 
-        with engine.begin() as conn:
-            file_name = conn.execute(text(select_sql)).fetchone()
-            if file_name:
-                file_name = file_name[0]
-            print(file_name)
-
-        if file_name != args.sftp_remote_path:
+        if not folder or status != "Success":
             # Add entry to etl_log table
             etl_log_start_time = time.time()
             print("------\nSTEP 0: CREATING ENTRY IN ETL_LOG TABLE\n------")
 
-            insert_sql = f"INSERT INTO etl_log (file_name, job_status) VALUES ('{args.sftp_remote_path}', 'In Progress')"
-            select_sql = f"SELECT job_id FROM etl_log WHERE file_name = '{args.sftp_remote_path}'"
-            with engine.begin() as conn:
-                conn.execute(text(insert_sql))
-                job_id = conn.execute(text(select_sql)).fetchone()[0]
+            job_id = insert_etl_log(args.sftp_remote_path, engine)
 
             etl_log_elapsed_time = time.time() - etl_log_start_time
 
             print(
-                f"------\nSTEP 0 COMPLETE: JOB_ID {job_id} ADDED TO ETL_LOG TABLE. Elapsed Time: {etl_log_elapsed_time:.2f} seconds"
+                f"------\nSTEP 0 COMPLETE: ROW ADDED TO ETL_LOG TABLE. Elapsed Time: {etl_log_elapsed_time:.2f} seconds"
             )
 
             # Step 1: Download the SFTP files to the PVC
@@ -270,7 +328,7 @@ def main():
 
             # Update job status in etl_log table
             alter_sql = (
-                f"UPDATE etl_log SET job_status = 'Pass' WHERE job_id = '{job_id}'"
+                f"UPDATE etl_log SET status = 'Success' WHERE job_id = '{job_id}'"
             )
             with engine.begin() as conn:
                 conn.execute(text(alter_sql))
@@ -282,10 +340,7 @@ def main():
 
     except Exception as e:
         logger.info(f"An error occurred: {str(e)}")
-
-        alter_sql = f"UPDATE etl_log SET job_status = 'Fail' WHERE job_id = '{job_id}'"
-        with engine.begin() as conn:
-            conn.execute(text(alter_sql))
+        update_tables_on_failure(engine, job_id)
 
     finally:
         personalisation = {
