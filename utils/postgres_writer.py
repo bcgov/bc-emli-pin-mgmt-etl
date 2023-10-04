@@ -62,11 +62,12 @@ def get_row_count(table_name, engine):
     query = select([func.count()]).select_from(text(table_name))
     conn = engine.connect()
     totalCount = conn.execute(query).fetchone()[0]
-    print(query)  # Remove after debugging
     return totalCount
 
 
-def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
+def write_dataframe_to_postgres(
+    dataframe, table_name, engine, etl_job_id, batch_size=1000
+):
     """
     Write a DataFrame to a PostgreSQL table in batches.
 
@@ -85,6 +86,10 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
 
         rows_before_insert = get_row_count(table_name, engine)
         dataframe = dataframe.replace(np.nan, "")
+        unique_key_columns = dataframe.columns.tolist()
+
+        if table_name != "active_pin":
+            dataframe["etl_log_id"] = str(etl_job_id)
 
         # Split the dataframe into batches
         batches = [
@@ -92,7 +97,6 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
         ]
 
         # Define the columns that make up the unique key --all columns
-        unique_key_columns = dataframe.columns.tolist()
 
         for batch in batches:
             update_response = insert_postgres_table_if_rows_not_exist(
@@ -115,6 +119,7 @@ def write_dataframe_to_postgres(dataframe, table_name, engine, batch_size=1000):
 
 def run(
     input_directory,
+    etl_job_id,
     database_name,
     batch_size=1000,
     host="localhost",
@@ -160,7 +165,7 @@ def run(
             # Use file name without extension as table name
             table_name = os.path.splitext(file_name)[0]
             rows_inserted = write_dataframe_to_postgres(
-                df, table_name, engine, batch_size=batch_size
+                df, table_name, engine, etl_job_id, batch_size=batch_size
             )
             elapsed_time = time.time() - start_time
             table_statistics.append(
