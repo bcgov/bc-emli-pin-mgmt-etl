@@ -192,7 +192,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             pd.read_csv(
                 input_directory + "2_parcel.csv",
                 usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
-                dtype={"PRMNNT_PRCL_ID": int, "PRCL_STTS_CD": str},
+                dtype={"PRMNNT_PRCL_ID": str, "PRCL_STTS_CD": str},
             )
             .map(lambda x: x.strip() if isinstance(x, str) else x)
             .replace("", None)
@@ -216,7 +216,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
                 dtype={
                     "TITLE_NMBR": str,
                     "LTB_DISTRICT_CD": str,
-                    "PRMNNT_PRCL_ID": int,
+                    "PRMNNT_PRCL_ID": str,
                 },
             )
             .map(lambda x: x.strip() if isinstance(x, str) else x)

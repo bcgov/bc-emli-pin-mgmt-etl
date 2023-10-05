@@ -63,78 +63,101 @@ def send_email_notification(
         print(f"Error sending email notification: {str(e)}")
 
 
-def find_elt_log(engine, folder_str):
+def get_status_from_etl_log_table(engine, folder):
     """
-    Find folder and status where folder is latest data folder from LTSA.
+    Get status from etl_log table.
 
     Args:
-        folder_str (str): Latest data folder name from LTSA.
+        folder (str): Name of latest data folder from LTSA.
         engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
 
     Returns:
-        folder (str): Name of folder in etl_log table OR (None): If folder is not already in etl_log table.
-        status (str): Status from etl_log table OR (None): If folder is not already in etl_log table.
+        status (str): Status from etl_log table OR status (None): If folder does not exist in etl_log table.
     """
-    select_sql = f"SELECT folder, status FROM etl_log WHERE folder = '{folder_str}'"
-    with engine.begin() as conn:
-        result = conn.execute(text(select_sql)).fetchall()
-        if result:
-            if "Success" in str(result):
-                folder = folder_str
-                status = "Success"
+    try:
+        select_sql = f"SELECT folder, status FROM etl_log WHERE folder = '{folder}'"
+        with engine.begin() as conn:
+            result = conn.execute(text(select_sql)).fetchall()
+            if result:
+                if "Success" in str(result):
+                    status = "Success"
+                else:
+                    status = result[0][1]
             else:
-                folder = result[0][0]
-                status = result[0][1]
-        else:
-            folder = None
-            status = None
-    return folder, status
+                status = None
+        return status
+
+    except Exception as e:
+        raise e
 
 
-def insert_etl_log(folder_str, engine):
+def insert_status_into_etl_log_table(engine, folder, status):
     """
-    Insert new entry into etl_log table with a status of in progress.
+    Insert row into etl_log table with provided status.
 
     Args:
-        folder_str (str): Folder name to be inserted.
+        folder (str): Folder name to be inserted.
         engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
+        status (str): Status to be inserted into etl_log table
 
     Returns:
         job_id (UUID): Job_id from etl_log table.
     """
-    insert_sql = (
-        f"INSERT INTO etl_log (folder, status) VALUES ('{folder_str}', 'In Progress')"
-    )
-    select_sql = f"SELECT job_id FROM etl_log WHERE folder = '{folder_str}' AND status = 'In Progress'"
-    with engine.begin() as conn:
-        conn.execute(text(insert_sql))
-        job_id = conn.execute(text(select_sql)).fetchone()[0]
-    return job_id
+    try:
+        insert_sql = (
+            f"INSERT INTO etl_log (folder, status) VALUES ('{folder}', '{status}')"
+        )
+        select_sql = f"SELECT job_id FROM etl_log WHERE folder = '{folder}' AND status = '{status}'"
+        with engine.begin() as conn:
+            conn.execute(text(insert_sql))
+            job_id = conn.execute(text(select_sql)).fetchone()[0]
+        return job_id
+
+    except Exception as e:
+        raise e
 
 
-def update_tables_on_failure(engine, job_id):
+def update_status_in_etl_log_table(engine, job_id, status):
     """
-    Update etl_log table and raw tables on failure.
-    Update etl_log table status to 'Failure' and drop associated data from raw tables using foreign key, etl_log_id.
+    Update row in etl_log table with provided status.
 
     Args:
         engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
+        job_id (UUID): Job_id from etl_log table.
+        status (str): Status to update row to in etl_log table.
+
+    Returns:
+        None
+    """
+    try:
+        update_sql = f"UPDATE etl_log SET status = '{status}' WHERE job_id = '{job_id}'"
+        with engine.begin() as conn:
+            conn.execute(text(update_sql))
+    except Exception as e:
+        raise e
+
+
+def delete_rows_with_job_id(engine, table_column, job_id):
+    """
+    Delete rows in provided tables where job_id is a foreign key in the provided row.
+
+    Args:
+        engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
+        table_column (dict): Key is table name, value is column that contains foreign key with etl_log.job_id.
         job_id (UUID): Job_id from etl_log table.
 
     Returns:
         None
     """
-    alter_sql = f"UPDATE etl_log SET status = 'Failure' WHERE job_id = '{job_id}'"
-    delete_sql = f"""
-        DELETE FROM title_raw WHERE etl_log_id = '{job_id}';
-        DELETE FROM parcel_raw WHERE etl_log_id = '{job_id}';
-        DELETE FROM titleparcel_raw WHERE etl_log_id = '{job_id}';
-        DELETE FROM titleowner_raw WHERE etl_log_id = '{job_id}';
-    """
-
-    with engine.begin() as conn:
-        conn.execute(text(alter_sql))
-        conn.execute(text(delete_sql))
+    try:
+        for table_name, column_name in table_column.items():
+            delete_sql = f"""
+                DELETE FROM {table_name} WHERE {column_name} = '{job_id}';
+            """
+            with engine.begin() as conn:
+                conn.execute(text(delete_sql))
+    except Exception as e:
+        raise e
 
 
 def main():
@@ -150,7 +173,6 @@ def main():
         None
     """
     start_time = datetime.now().strftime("%a %d %b %Y, %I:%M%p")
-    ran = False
 
     parser = argparse.ArgumentParser(
         prog="BC PVS ETL Job",
@@ -241,15 +263,17 @@ def main():
         engine = create_engine(conn_str)
 
         # Check if file has already been run
-        folder, status = find_elt_log(engine, args.sftp_remote_path)
+        folder = args.sftp_remote_path
+        run_status = get_status_from_etl_log_table(engine, folder)
 
-        if not folder or status != "Success":
-            ran = True
+        if run_status in [None, "Failure", "In Progress", "Cancelled"]:
             # Add entry to etl_log table
             etl_log_start_time = time.time()
             print("------\nSTEP 0: CREATING ENTRY IN ETL_LOG TABLE\n------")
 
-            job_id = insert_etl_log(args.sftp_remote_path, engine)
+            job_id = insert_status_into_etl_log_table(
+                engine, args.sftp_remote_path, "In Progress"
+            )
 
             etl_log_elapsed_time = time.time() - etl_log_start_time
 
@@ -332,49 +356,65 @@ def main():
                 f"------\nSTEP 4 COMPLETED: EXPIRED PINS. Elapsed Time: {expier_elapsed_time:.2f} seconds"
             )
 
-            # Update job status in etl_log table
-            alter_sql = (
-                f"UPDATE etl_log SET status = 'Success' WHERE job_id = '{job_id}'"
-            )
-            with engine.begin() as conn:
-                conn.execute(text(alter_sql))
+            update_status_in_etl_log_table(engine, job_id, "Success")
 
             logger.info("------\nETL JOB COMPLETED SUCCESSFULLY\n------")
 
             personalisation = {
-                "start_time": start_time,
                 "status": "Success",
                 "message": "ETL job completed successfully",
             }
 
         else:
+            insert_status_into_etl_log_table(engine, args.sftp_remote_path, "Cancelled")
+
+            personalisation = {
+                "status": "Cancelled",
+                "message": "ETL job cancelled because of a previous successful run.",
+            }
+
             print(f"------\nETL JOB NOT RUN: FILE ALREADY RAN\n------")
 
     except Exception as e:
         personalisation = {
-            "start_time": start_time,
             "status": "Failure",
             "message": str(e),
         }
 
         logger.info(f"An error occurred: {str(e)}")
-        update_tables_on_failure(engine, job_id)
+
+        try:
+            if "job_id" in locals():
+                raw_tables_and_log_id_column = {
+                    "title_raw": "etl_log_id",
+                    "parcel_raw": "etl_log_id",
+                    "titleparcel_raw": "etl_log_id",
+                    "titleowner_raw": "etl_log_id",
+                }
+                update_status_in_etl_log_table(engine, job_id, "Failure")
+                delete_rows_with_job_id(engine, raw_tables_and_log_id_column, job_id)
+
+            else:
+                insert_status_into_etl_log_table(engine, folder, "Failure")
+
+        except Exception as e:
+            logger.info(f"An error occurred: {str(e)}")
 
     finally:
         # Send an email with the log file attachment regardless of success or error
-        if ran:
-            logger.info(personalisation)
-            send_email_notification(
-                args.api_key,
-                args.base_url,
-                args.email_address,
-                args.template_id,
-                args.log_folder,
-                log_filename,
-                personalisation["start_time"],
-                personalisation["status"],
-                personalisation["message"],
-            )
+        personalisation["start_time"] = start_time
+
+        send_email_notification(
+            args.api_key,
+            args.base_url,
+            args.email_address,
+            args.template_id,
+            args.log_folder,
+            log_filename,
+            personalisation["start_time"],
+            personalisation["status"],
+            personalisation["message"],
+        )
 
 
 if __name__ == "__main__":
