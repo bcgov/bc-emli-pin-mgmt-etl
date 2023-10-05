@@ -70,7 +70,12 @@ def get_row_count(table_name, engine):
 
 
 def write_dataframe_to_postgres(
-    dataframe, table_name, engine, etl_job_id, batch_size=1000
+    dataframe,
+    table_name,
+    engine,
+    etl_job_id,
+    tables_with_etl_log_foreign_key,
+    batch_size=1000,
 ):
     """
     Write a DataFrame to a PostgreSQL table in batches.
@@ -92,7 +97,7 @@ def write_dataframe_to_postgres(
         dataframe = dataframe.replace(np.nan, "")
         unique_key_columns = dataframe.columns.tolist()
 
-        if table_name != "active_pin":
+        if table_name in tables_with_etl_log_foreign_key:
             dataframe["etl_log_id"] = str(etl_job_id)
 
         # Split the dataframe into batches
@@ -167,9 +172,22 @@ def run(
             df = pd.read_csv(file_path, encoding="unicode_escape", low_memory=False)
             # Use file name without extension as table name
             table_name = os.path.splitext(file_name)[0]
+            tables_with_etl_log_foreign_key = [
+                "title_raw",
+                "parcel_raw",
+                "titleparcel_raw",
+                "titleowner_raw",
+            ]
+
             rows_inserted = write_dataframe_to_postgres(
-                df, table_name, engine, etl_job_id, batch_size=batch_size
+                df,
+                table_name,
+                engine,
+                etl_job_id,
+                tables_with_etl_log_foreign_key,
+                batch_size=batch_size,
             )
+
             elapsed_time = time.time() - start_time
             table_statistics.append(
                 {
