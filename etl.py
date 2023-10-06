@@ -91,12 +91,11 @@ def get_status_from_etl_log_table(engine, folder):
         raise e
 
 
-def insert_status_into_etl_log_table(engine, folder, status):
+def insert_status_into_etl_log_table(engine, status):
     """
     Insert row into etl_log table with provided status.
 
     Args:
-        folder (str): Folder name to be inserted.
         engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
         status (str): Status to be inserted into etl_log table
 
@@ -104,10 +103,8 @@ def insert_status_into_etl_log_table(engine, folder, status):
         job_id (UUID): Job_id from etl_log table.
     """
     try:
-        insert_sql = (
-            f"INSERT INTO etl_log (folder, status) VALUES ('{folder}', '{status}')"
-        )
-        select_sql = f"SELECT job_id FROM etl_log WHERE folder = '{folder}' AND status = '{status}'"
+        insert_sql = f"INSERT INTO etl_log (status) VALUES ('{status}')"
+        select_sql = f"SELECT job_id FROM etl_log WHERE status = '{status}' ORDER BY updated_at DESC LIMIT 1"
         with engine.begin() as conn:
             conn.execute(text(insert_sql))
             job_id = conn.execute(text(select_sql)).fetchone()[0]
@@ -117,7 +114,7 @@ def insert_status_into_etl_log_table(engine, folder, status):
         raise e
 
 
-def update_status_in_etl_log_table(engine, job_id, status):
+def update_status_in_etl_log_table(engine, job_id, status, folder=None):
     """
     Update row in etl_log table with provided status.
 
@@ -125,14 +122,22 @@ def update_status_in_etl_log_table(engine, job_id, status):
         engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
         job_id (UUID): Job_id from etl_log table.
         status (str): Status to update row to in etl_log table.
+        folder (str): Folder name to be inserted
 
     Returns:
         None
     """
     try:
-        update_sql = f"UPDATE etl_log SET status = '{status}' WHERE job_id = '{job_id}'"
+        if folder:
+            update_sql = f"UPDATE etl_log SET folder = '{folder}', status = '{status}' WHERE job_id = '{job_id}'"
+        else:
+            update_sql = (
+                f"UPDATE etl_log SET status = '{status}' WHERE job_id = '{job_id}'"
+            )
+
         with engine.begin() as conn:
             conn.execute(text(update_sql))
+
     except Exception as e:
         raise e
 
@@ -262,42 +267,43 @@ def main():
         conn_str = f"postgresql://{args.db_username}:{args.db_password}@{args.db_host}:{args.db_port}/{args.db_name}"
         engine = create_engine(conn_str)
 
-        # Check if file has already been run
-        folder = args.sftp_remote_path
+        # Add entry to etl_log table
+        etl_log_start_time = time.time()
+        print("------\nSTEP 0: CREATING INITIAL ENTRY IN ETL_LOG TABLE\n------")
+
+        job_id = insert_status_into_etl_log_table(engine, "In Progress")
+
+        etl_log_elapsed_time = time.time() - etl_log_start_time
+
+        print(
+            f"------\nSTEP 0 COMPLETE: ROW ADDED TO ETL_LOG TABLE. Elapsed Time: {etl_log_elapsed_time:.2f} seconds"
+        )
+
+        # Step 1: Download the SFTP files to the PVC
+
+        downloader_start_time = time.time()
+        print("------\nSTEP 1: DOWNLOADING LTSA FILES\n------")
+        folder = sftp_downloader.run(
+            host=args.sftp_host,
+            port=args.sftp_port,
+            username=args.sftp_username,
+            password=args.sftp_password,
+            remote_path=args.sftp_remote_path,
+            local_path=args.sftp_local_path,
+        )
+
+        downloader_elapsed_time = time.time() - downloader_start_time
+        print(
+            f"------\nSTEP 1 COMPLETED: DOWNLOADED LTSA FILES. Elapsed Time: {downloader_elapsed_time:.2f} seconds"
+        )
+
+        # Check if folder has already been run
+        # folder = "folder_name"    # Uncomment to test locally
         run_status = get_status_from_etl_log_table(engine, folder)
 
         if run_status in [None, "Failure", "In Progress", "Cancelled"]:
-            # Add entry to etl_log table
-            etl_log_start_time = time.time()
-            print("------\nSTEP 0: CREATING ENTRY IN ETL_LOG TABLE\n------")
-
-            job_id = insert_status_into_etl_log_table(
-                engine, args.sftp_remote_path, "In Progress"
-            )
-
-            etl_log_elapsed_time = time.time() - etl_log_start_time
-
-            print(
-                f"------\nSTEP 0 COMPLETE: ROW ADDED TO ETL_LOG TABLE. Elapsed Time: {etl_log_elapsed_time:.2f} seconds"
-            )
-
-            # Step 1: Download the SFTP files to the PVC
-
-            downloader_start_time = time.time()
-            print("------\nSTEP 1: DOWNLOADING LTSA FILES\n------")
-            sftp_downloader.run(
-                host=args.sftp_host,
-                port=args.sftp_port,
-                username=args.sftp_username,
-                password=args.sftp_password,
-                remote_path=args.sftp_remote_path,
-                local_path=args.sftp_local_path,
-            )
-
-            downloader_elapsed_time = time.time() - downloader_start_time
-            print(
-                f"------\nSTEP 1 COMPLETED: DOWNLOADED LTSA FILES. Elapsed Time: {downloader_elapsed_time:.2f} seconds"
-            )
+            # Update with latest folder name
+            update_status_in_etl_log_table(engine, job_id, "In Progress", folder=folder)
 
             # Step 2: Process the downloaded SFTP files and write to the output folder
 
@@ -366,7 +372,8 @@ def main():
             }
 
         else:
-            insert_status_into_etl_log_table(engine, args.sftp_remote_path, "Cancelled")
+            # Update with Cancelled status and latest folder name
+            update_status_in_etl_log_table(engine, job_id, "Cancelled", folder=folder)
 
             personalisation = {
                 "status": "Cancelled",
@@ -395,7 +402,7 @@ def main():
                 delete_rows_with_job_id(engine, raw_tables_and_log_id_column, job_id)
 
             else:
-                insert_status_into_etl_log_table(engine, folder, "Failure")
+                insert_status_into_etl_log_table(engine, "Failure")
 
         except Exception as e:
             logger.info(f"An error occurred: {str(e)}")
