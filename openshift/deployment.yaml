@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etl-cronjob
+spec:
+  schedule: "0 22 * * *"
+  startingDeadlineSeconds: 3600
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3  # Keep the last 3 successful job instances
+  failedJobsHistoryLimit: 3      # Keep the last 3 failed job instances
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: data 
+          containers:
+          - name: etl-container
+            image: 'image-registry.openshift-image-registry.svc:5000/c82b4c-dev/bc-emli-pin-mgmt-etl:latest'
+            imagePullPolicy: Always
+            resources:
+              limits:
+                memory: "512Mi"  # Limit memory usage to 1GB
+                cpu: "500m"       # Limit CPU usage to 1 core
+              requests:
+                memory: "200Mi"  # Request 512MB of memory
+                cpu: "250m"       # Request 0.5 CPU core
+            volumeMounts:
+            - name: data
+              mountPath: /data
+          restartPolicy: OnFailure
