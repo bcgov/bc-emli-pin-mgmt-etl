@@ -14,7 +14,7 @@ kind: CronJob
 metadata:
   name: etl-cronjob
 spec:
-  schedule: "0 22 * * *"
+  schedule: "*/5 * * * *"
   startingDeadlineSeconds: 3600
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3  # Keep the last 3 successful job instances
