@@ -11,6 +11,29 @@ spec:
 
 ---
 apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cleanup-schemaspy-pvc
+spec:
+  template:
+    spec:
+      containers:
+      - name: cleanup-container
+        image: 'alpine:latest'  # You can use a simple Alpine Linux image for cleanup
+        command: ["/bin/sh"]
+        args: ["-c", "rm -rf /output/*"]
+        volumeMounts:
+        - name: output
+          mountPath: /output
+      restartPolicy: OnFailure
+      volumes:
+      - name: output
+        persistentVolumeClaim:
+          claimName: schemaspy
+  backoffLimit: 0
+
+---
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: schemaspy-cronjob
@@ -32,7 +55,7 @@ spec:
           - name: schemaspy-container
             image: 'schemaspy/schemaspy:latest'  # Adjust the image and tag as needed
             imagePullPolicy: Always
-            args: ["-t", "$(DB_TYPE)", "-db", "$(DB_NAME)", "-host", "$(DB_HOST)", "-u", "$(DB_USER)", "-p", "$(DB_PASSWORD)", "-I", "$(TABLES_TO_EXCLUDE)"]
+            args: ["-t", "$(DB_TYPE)", "-db", "$(DB_NAME)", "-host", "$(DB_HOST)", "-u", "$(DB_USER)", "-p", "$(DB_PASSWORD)"]
             resources:
               limits:
                 memory: "512Mi"
