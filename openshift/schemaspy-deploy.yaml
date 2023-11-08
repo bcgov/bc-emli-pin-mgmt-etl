@@ -1,10 +1,30 @@
+parameters:
+- name: DB_TYPE
+  description: Database type (e.g., mysql, postgres, oracle)
+  value: mysql
+- name: DB_NAME
+  description: Database name
+  value: your_database_name
+- name: DB_HOST
+  description: Database host address
+  value: your_database_host
+- name: DB_USER
+  description: Database username
+  value: your_database_user
+- name: DB_PASSWORD
+  description: Database password
+  value: your_database_password
+- name: EXCLUDE_TABLES
+  description: Tables to exclude (comma-separated, e.g., table1,table2)
+  value: ""
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: schemaspy
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 1Gi  # Adjust the storage size as needed
@@ -55,7 +75,19 @@ spec:
           - name: schemaspy-container
             image: 'schemaspy/schemaspy:latest'  # Adjust the image and tag as needed
             imagePullPolicy: Always
-            args: ["-t", "$(DB_TYPE)", "-db", "$(DB_NAME)", "-host", "$(DB_HOST)", "-u", "$(DB_USER)", "-p", "$(DB_PASSWORD)"]
+            args:
+            - "-t"
+            - "$(DB_TYPE)"
+            - "-db"
+            - "$(DB_NAME)"
+            - "-host"
+            - "$(DB_HOST)"
+            - "-u"
+            - "$(DB_USER)"
+            - "-p"
+            - "$(DB_PASSWORD)"
+            - "-I"
+            - "$(EXCLUDE_TABLES)"
             resources:
               limits:
                 memory: "512Mi"
