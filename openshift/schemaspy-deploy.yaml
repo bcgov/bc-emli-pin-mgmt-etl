@@ -1,0 +1,101 @@
+parameters:
+- name: DB_TYPE
+  description: Database type (e.g., mysql, postgres, oracle)
+  value: mysql
+- name: DB_NAME
+  description: Database name
+  value: your_database_name
+- name: DB_HOST
+  description: Database host address
+  value: your_database_host
+- name: DB_USER
+  description: Database username
+  value: your_database_user
+- name: DB_PASSWORD
+  description: Database password
+  value: your_database_password
+- name: EXCLUDE_TABLES
+  description: Tables to exclude (comma-separated, e.g., table1,table2)
+  value: ""
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: schemaspy
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi  # Adjust the storage size as needed
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cleanup-schemaspy-pvc
+spec:
+  template:
+    spec:
+      containers:
+      - name: cleanup-container
+        image: 'alpine:latest'  # You can use a simple Alpine Linux image for cleanup
+        command: ["/bin/sh"]
+        args: ["-c", "rm -rf /output/*"]
+        volumeMounts:
+        - name: output
+          mountPath: /output
+      restartPolicy: OnFailure
+      volumes:
+      - name: output
+        persistentVolumeClaim:
+          claimName: schemaspy
+  backoffLimit: 0
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: schemaspy-cronjob
+spec:
+  schedule: "*/10 * * * *"
+  startingDeadlineSeconds: 3600
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: output
+            persistentVolumeClaim:
+              claimName: schemaspy
+          containers:
+          - name: schemaspy-container
+            image: 'schemaspy/schemaspy:latest'  # Adjust the image and tag as needed
+            imagePullPolicy: Always
+            args:
+            - "-t"
+            - "$(DB_TYPE)"
+            - "-db"
+            - "$(DB_NAME)"
+            - "-host"
+            - "$(DB_HOST)"
+            - "-u"
+            - "$(DB_USER)"
+            - "-p"
+            - "$(DB_PASSWORD)"
+            - "-I"
+            - "$(EXCLUDE_TABLES)"
+            resources:
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+              requests:
+                memory: "200Mi"
+                cpu: "250m"
+            volumeMounts:
+            - name: output
+              mountPath: /output  # Adjust the mount path as needed
+          restartPolicy: OnFailure

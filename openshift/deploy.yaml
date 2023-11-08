@@ -25,7 +25,7 @@ objects:
       name: data
     spec:
       accessModes:
-        - ReadWriteOnce
+        - ReadWriteMany
       resources:
         requests:
           storage: "${PVC_SIZE}"
