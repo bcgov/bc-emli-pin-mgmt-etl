@@ -246,6 +246,9 @@ def main():
 
     # Add command-line arguments for PIN Expiration
     parser.add_argument("--expire_api_url", type=str, help="The Expire PIN API url")
+    parser.add_argument(
+        "--vhers_api_key", type=str, help="API Key for Expire PIN API endpoint"
+    )
 
     # Add a new command-line argument for log folder
     parser.add_argument(
@@ -269,7 +272,7 @@ def main():
 
         # Add entry to etl_log table
         etl_log_start_time = time.time()
-        print("------\nSTEP 0: CREATING INITIAL ENTRY IN ETL_LOG TABLE\n------")
+        print("------\nSTEP 0: CREATING INITIAL ENTRY IN ETL_LOG TABLE")
 
         job_id = insert_status_into_etl_log_table(engine, "In Progress")
 
@@ -350,6 +353,7 @@ def main():
             pin_expirer.run(
                 input_directory=args.sftp_local_path,
                 expire_api_url=args.expire_api_url,
+                vhers_api_key=args.vhers_api_key,
                 database_name=args.db_name,
                 host=args.db_host,
                 port=args.db_port,

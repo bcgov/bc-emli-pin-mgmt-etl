@@ -34,4 +34,5 @@ CMD python etl.py \
     --email_address=${email_address} \
     --template_id=${template_id} \
     --log_folder=${log_folder} \
-    --expire_api_url=${expire_api_url}
+    --expire_api_url=${expire_api_url} \
+    --vhers_api_key=${vhers_api_key}
