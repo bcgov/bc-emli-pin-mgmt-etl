@@ -8,6 +8,9 @@ parameters:
 - name: DB_HOST
   description: Database host address
   value: your_database_host
+- name: DB_PORT
+  description: Database port
+  value: "5432"
 - name: DB_USER
   description: Database username
   value: your_database_user
@@ -27,7 +30,7 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 1Gi  # Adjust the storage size as needed
+      storage: 1Gi
 
 ---
 apiVersion: batch/v1
@@ -39,7 +42,7 @@ spec:
     spec:
       containers:
       - name: cleanup-container
-        image: 'alpine:latest'  # You can use a simple Alpine Linux image for cleanup
+        image: 'alpine:latest'
         command: ["/bin/sh"]
         args: ["-c", "rm -rf /output/*"]
         volumeMounts:
@@ -73,7 +76,7 @@ spec:
               claimName: schemaspy
           containers:
           - name: schemaspy-container
-            image: 'schemaspy/schemaspy:latest'  # Adjust the image and tag as needed
+            image: 'schemaspy/schemaspy:latest'
             imagePullPolicy: Always
             args:
             - "-t"
@@ -82,6 +85,8 @@ spec:
             - "$(DB_NAME)"
             - "-host"
             - "$(DB_HOST)"
+            - "-p"
+            - "$(DB_PORT)"
             - "-u"
             - "$(DB_USER)"
             - "-p"
@@ -97,5 +102,5 @@ spec:
                 cpu: "250m"
             volumeMounts:
             - name: output
-              mountPath: /output  # Adjust the mount path as needed
+              mountPath: /output
           restartPolicy: OnFailure
