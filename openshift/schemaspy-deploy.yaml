@@ -1,26 +1,3 @@
-parameters:
-- name: DB_TYPE
-  description: Database type (e.g., mysql, postgres, oracle)
-  value: pgsql
-- name: DB_NAME
-  description: Database name
-  value: your_database_name
-- name: DB_HOST
-  description: Database host address
-  value: your_database_host
-- name: DB_PORT
-  description: Database port
-  value: "5432"
-- name: DB_USER
-  description: Database username
-  value: your_database_user
-- name: DB_PASSWORD
-  description: Database password
-  value: your_database_password
-- name: EXCLUDE_TABLES
-  description: Tables to exclude (comma-separated, e.g., table1,table2)
-  value: ""
-
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -78,14 +55,50 @@ spec:
           - name: schemaspy-container
             image: 'schemaspy/schemaspy:latest'
             imagePullPolicy: Always
-            args:
+            env:  # Use environment variables for Secret values
+            - name: DB_TYPE
+              valueFrom:
+                secretKeyRef:
+                  name: patroni-ha-postgres-instance
+                  key: schemaspy-db-type
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: patroni-ha-postgres-instance
+                  key: app-db-name
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: patroni-ha-postgres-instance
+                  key: app-db-hostname
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: patroni-ha-postgres-instance
+                  key: app-db-port
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: patroni-ha-postgres-instance
+                  key: app-db-name
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: patroni-ha-postgres-instance
+                  key: app-db-password
+            - name: EXCLUDE_TABLES
+              valueFrom:
+                secretKeyRef:
+                  name: patroni-ha-postgres-instance
+                  key: schemaspy-exclude-tables
+            args:  # Command-line arguments
             - "-t"
             - "$(DB_TYPE)"
             - "-db"
             - "$(DB_NAME)"
             - "-host"
             - "$(DB_HOST)"
-            - "-p"
+            - "-port"
             - "$(DB_PORT)"
             - "-u"
             - "$(DB_USER)"
