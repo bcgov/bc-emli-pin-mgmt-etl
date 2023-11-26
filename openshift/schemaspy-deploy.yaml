@@ -1,7 +1,7 @@
 parameters:
 - name: DB_TYPE
   description: Database type (e.g., mysql, postgres, oracle)
-  value: mysql
+  value: pgsql
 - name: DB_NAME
   description: Database name
   value: your_database_name
