@@ -80,7 +80,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: patroni-ha-postgres-instance
-                  key: app-db-name
+                  key: app-db-username
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
