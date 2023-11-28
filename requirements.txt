@@ -4,3 +4,5 @@ sqlalchemy
 notifications_python_client
 requests
 psycopg2
+pytest
+pytest-cov
