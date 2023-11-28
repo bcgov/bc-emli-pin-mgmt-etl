@@ -64,9 +64,8 @@ def create_csvs():
         writer = csv.writer(csv_file, dialect='excel')
         writer.writerows(titleowner_rows)
 
-def test_parse_ltsa_files(mocker):
+def test_parse_ltsa_files():
     create_csvs()
-    # mocker.patch('utils.ltsa_parser.clean_active_pin_df')
     parse_ltsa_files(inputDirectory, outputDirectory, dataRulesUrl)
     os.remove(title_test_file)
     os.remove(parcel_test_file)
