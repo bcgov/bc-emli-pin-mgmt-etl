@@ -1,12 +1,20 @@
 import csv
 import os
-from utils.ltsa_parser import pid_parser
-from utils.ltsa_parser import parse_ltsa_files
-from utils.ltsa_parser import run
+from unittest.mock import patch
+import pytest
+from utils.ltsa_parser import (
+    pid_parser,
+    parse_ltsa_files,
+    run,
+    load_data_cleaning_rules,
+)
 
 pidListMultiplePids = [123, 234, 345]
+pidListMultiplePidsParsed = "123|234|345"
 pidListOnePid = [123]
+pidListOnePidParsed = "123"
 pidListNoPid = []
+pidListNoPidParsed = ""
 
 inputDirectory = ""
 outputDirectory = ""
@@ -106,9 +114,9 @@ titleowner_rows = [
     [
         "AA100060E  ",
         "NW",
-        1,
-        1,
-        1,
+        "1",
+        "1",
+        "1",
         "J",
         "ANN MARY",
         "LIVESLEY",
@@ -125,12 +133,6 @@ titleowner_rows = [
         "",
     ],
 ]
-
-
-def test_pid_parser():
-    assert pid_parser(pidListMultiplePids) == "123|234|345"
-    assert pid_parser(pidListOnePid) == "123"
-    assert pid_parser(pidListNoPid) == ""
 
 
 def create_csvs():
@@ -151,21 +153,63 @@ def create_csvs():
         writer.writerows(titleowner_rows)
 
 
+def remove_csvs(listOfFiles):
+    for file in listOfFiles:
+        os.remove(file)
+
+
+def test_pid_parser():
+    assert pid_parser(pidListMultiplePids) == pidListMultiplePidsParsed
+    assert pid_parser(pidListOnePid) == pidListOnePidParsed
+    assert pid_parser(pidListNoPid) == pidListNoPidParsed
+
+
 def test_parse_ltsa_files():
     create_csvs()
     parse_ltsa_files(inputDirectory, outputDirectory, dataRulesUrl)
-    os.remove(title_test_file)
-    os.remove(parcel_test_file)
-    os.remove(titleparcel_test_file)
-    os.remove(titleowner_test_file)
-    os.remove(rawTitleFileName)
-    os.remove(rawParcelFileName)
-    os.remove(rawTitleparcelFileName)
-    os.remove(rawTitleownerFileName)
-    os.remove(activePinFileName)
+    remove_csvs(
+        [
+            title_test_file,
+            parcel_test_file,
+            titleparcel_test_file,
+            titleowner_test_file,
+            rawTitleFileName,
+            rawParcelFileName,
+            rawTitleparcelFileName,
+            rawTitleownerFileName,
+            activePinFileName,
+        ]
+    )
 
 
-def test_run(mocker):
-    mocker.patch("utils.ltsa_parser.parse_ltsa_files")
-    mocker.patch("os.makedirs")
+@patch("utils.ltsa_parser.clean_active_pin_df", side_effect=ValueError)
+def test_parse_ltsa_files_error(clean_mock):
+    create_csvs()
+    with pytest.raises(ValueError):
+        parse_ltsa_files(inputDirectory, outputDirectory, dataRulesUrl)
+    assert clean_mock.calledOnce()
+    remove_csvs(
+        [
+            title_test_file,
+            parcel_test_file,
+            titleparcel_test_file,
+            titleowner_test_file,
+            rawTitleFileName,
+            rawParcelFileName,
+            rawTitleparcelFileName,
+            rawTitleownerFileName,
+        ]
+    )
+
+
+def test_load_data_cleaning_rules():
+    dataCleaningRules = load_data_cleaning_rules(dataRulesUrl)
+    assert type(dataCleaningRules) == dict
+
+
+@patch("utils.ltsa_parser.parse_ltsa_files")
+@patch("os.makedirs")
+def test_run(parser_mock, makedirs_mock):
     run(inputDirectory, outputDirectory, dataRulesUrl)
+    assert parser_mock.calledOnce()
+    assert makedirs_mock.calledOnce()
