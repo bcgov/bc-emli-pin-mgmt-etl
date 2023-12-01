@@ -81,7 +81,6 @@ def expire_pins(expired_titles_df, engine, expire_api_url, vhers_api_key):
                     data = {
                         "livePinId": live_pin_id,
                         "expirationReason": "CO",
-                        "propertyAddress": "Placeholder address",  # TODO: remove this once API is updated
                     }
                     url = expire_api_url
                     headers = {"x-api-key": vhers_api_key}
