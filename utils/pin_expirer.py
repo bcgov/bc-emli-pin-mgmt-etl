@@ -49,7 +49,7 @@ def create_expiration_df(input_directory):
         raise e
 
 
-def expire_pins(expired_titles_df, engine, expire_api_url):
+def expire_pins(expired_titles_df, engine, expire_api_url, vhers_api_key):
     """
     Reads expired_titles_df. For each cancelled title, the database is queried for the corresponding live_pin_id(s). Then the Expire PIN API is called.
 
@@ -57,6 +57,7 @@ def expire_pins(expired_titles_df, engine, expire_api_url):
     - expired_titles_df (pd.Dataframe): Dataframe containing cancelled titles with columns title_number and title_status.
     - engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
     - expire_api_url (str): Path for Expire PIN API endpoint.
+    - vhers_api_key (str): API Key for Expire PIN API endpoint.
 
     Returns:
     - None
@@ -81,10 +82,18 @@ def expire_pins(expired_titles_df, engine, expire_api_url):
                         "livePinId": live_pin_id,
                         "expirationReason": "CO",
                     }
-                    requests.post(url=expire_api_url, json=data)
+                    url = expire_api_url
+                    headers = {"x-api-key": vhers_api_key}
+
+                    try:
+                        response = requests.post(url=url, json=data, headers=headers)
+                        response.raise_for_status()
+                    except requests.exceptions.RequestException as e:
+                        raise e
 
                 except Exception as e:
                     print(f"An error occurred calling Expire PIN API: {str(e)}")
+                    raise e
 
             total_pins_expired = len(expired_rows_df["live_pin_id"])
 
@@ -104,6 +113,7 @@ def expire_pins(expired_titles_df, engine, expire_api_url):
 def run(
     input_directory,
     expire_api_url,
+    vhers_api_key,
     database_name,
     host,
     port,
@@ -117,6 +127,7 @@ def run(
     Parameters:
     - input_directory (str): Directory to read LTSA 1_title.csv file from.
     - expire_api_url (str): Path for Expire PIN API endpoint.
+    - vhers_api_key (str): API Key for Expire PIN API endpoint.
     - database_name (str): The name of the PostgreSQL database.
     - host (str, optional): The database host. Default is "localhost".
     - port (int, optional): The database port. Default is 5432.
@@ -136,7 +147,7 @@ def run(
         start_time = time.time()  # Start measuring time
 
         # Call expire pin API for each title in dataframe
-        expire_pins(df, engine, expire_api_url)
+        expire_pins(df, engine, expire_api_url, vhers_api_key)
 
         elapsed_time = time.time() - start_time
 
@@ -151,6 +162,7 @@ if __name__ == "__main__":
     # Replace these placeholders with your actual values
     input_directory = "your_input_directory"  # Replace with your input directory path
     expire_api_url = "your_expire_api_url"  # Replace with your local expire api url
+    vhers_api_key = "vhers_api_key"
     database_name = "postgres"  # Replace with your database name
     host = "localhost"  # Replace with your host
     port = 53173  # Replace with your port
@@ -161,6 +173,7 @@ if __name__ == "__main__":
     run(
         input_directory,
         expire_api_url,
+        vhers_api_key,
         database_name,
         host=host,
         port=port,
