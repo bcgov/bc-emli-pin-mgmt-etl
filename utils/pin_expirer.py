@@ -27,7 +27,7 @@ def create_expiration_df(input_directory):
                 "TITLE_NMBR": str,
                 "TTL_STTS_CD": str,
             },
-        ).map(lambda x: x.strip() if isinstance(x, str) else x)
+        ).applymap(lambda x: x.strip() if isinstance(x, str) else x)
         print("Read file: 1_title.csv")
 
         title_df.rename(
@@ -85,13 +85,11 @@ def expire_pins(expired_titles_df, engine, expire_api_url, vhers_api_key):
                     url = expire_api_url
                     headers = {"x-api-key": vhers_api_key}
 
-                    try:
-                        response = requests.post(url=url, json=data, headers=headers)
-                        response.raise_for_status()
-                    except requests.exceptions.RequestException as e:
-                        raise e
+                    response = requests.post(url=url, json=data, headers=headers)
+                    response.raise_for_status()
 
-                except Exception as e:
+                except requests.exceptions.HTTPError as e:
+                    # console.log()
                     print(f"An error occurred calling Expire PIN API: {str(e)}")
                     raise e
 
@@ -115,10 +113,10 @@ def run(
     expire_api_url,
     vhers_api_key,
     database_name,
-    host,
-    port,
-    user,
-    password,
+    host="localhost",
+    port=5432,
+    user="your_username",
+    password="your_password",
 ):
     """
     Finds cancelled titles from LTSA 1_title.csv file, and writes titles to dataframe. Reads expired_titles_df.
