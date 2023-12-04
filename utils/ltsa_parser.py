@@ -166,7 +166,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
                     "FRM_LT_DISTRICT_CD": str,
                 },
             )
-            .map(lambda x: x.strip() if isinstance(x, str) else x)
+            .applymap(lambda x: x.strip() if isinstance(x, str) else x)
             .replace("", None)
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "TTL_STTS_CD"])
@@ -194,7 +194,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
                 usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
                 dtype={"PRMNNT_PRCL_ID": str, "PRCL_STTS_CD": str},
             )
-            .map(lambda x: x.strip() if isinstance(x, str) else x)
+            .applymap(lambda x: x.strip() if isinstance(x, str) else x)
             .replace("", None)
             .replace(np.nan, None)
             .dropna(subset=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"])
@@ -219,7 +219,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
                     "PRMNNT_PRCL_ID": str,
                 },
             )
-            .map(lambda x: x.strip() if isinstance(x, str) else x)
+            .applymap(lambda x: x.strip() if isinstance(x, str) else x)
             .replace("", None)
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"])
@@ -274,7 +274,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
                     "ADDRS_PSTL_CD": str,
                 },
             )
-            .map(lambda x: x.strip() if isinstance(x, str) else x)
+            .applymap(lambda x: x.strip() if isinstance(x, str) else x)
             .replace("", None)
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD"])
