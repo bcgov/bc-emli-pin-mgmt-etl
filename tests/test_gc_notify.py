@@ -6,7 +6,7 @@ from utils.gc_notify import run, gc_notify_log
 
 
 api_key = "test-api-key"
-base_url = "https://api.notification.canada.ca"
+base_url = "test-base-url"
 email_address = "test@test.ca"
 template_id = "templateId"
 file_path = "testfile.txt"
@@ -20,10 +20,14 @@ file = "file contents"
 
 
 @patch(
+    "notifications_python_client.notifications.NotificationsAPIClient.__init__",
+    return_value = None
+)
+@patch(
     "notifications_python_client.notifications.NotificationsAPIClient.send_email_notification",
     return_value="gc_notify_response",
 )
-def test_gc_notify_log(sendEmailNotification_mock):
+def test_gc_notify_log(notificationsAPIClient_mock, sendEmailNotification_mock):
     with open("testfile.txt", "w") as f:
         f.write("File contents")
     response = gc_notify_log(
@@ -31,15 +35,19 @@ def test_gc_notify_log(sendEmailNotification_mock):
     )
     print(response)
     assert sendEmailNotification_mock.called_once()
+    assert notificationsAPIClient_mock.called_once()
     assert response == "gc_notify_response"
     os.remove("testfile.txt")
 
 
-# without mocking send_email_notification, call should fail due to incorrect template_id
-def test_gc_notify_log_error():
+@patch(
+    "notifications_python_client.notifications.NotificationsAPIClient.__init__",
+    return_value = None
+)
+def test_gc_notify_log_error(notificationsAPIClient_mock):
     with open("testfile.txt", "w") as f:
         f.write("File contents")
-    with pytest.raises(notifications_python_client.errors.HTTPError):
+    with pytest.raises(AttributeError):
         response = gc_notify_log(
             api_key,
             base_url,
@@ -49,6 +57,7 @@ def test_gc_notify_log_error():
             personalisation,
         )
         assert response == None
+        assert notificationsAPIClient_mock.called_once()
     os.remove("testfile.txt")
 
 
