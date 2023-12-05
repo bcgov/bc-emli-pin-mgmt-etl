@@ -156,7 +156,7 @@ def run(
         raise e
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # Replace these placeholders with your actual values
     input_directory = "your_input_directory"  # Replace with your input directory path
     expire_api_url = "your_expire_api_url"  # Replace with your local expire api url

@@ -72,7 +72,7 @@ def run(api_key, base_url, email_address, template_id, file_path, personalisatio
         raise e
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # Define your API key, base URL, email address, template ID, file path, and personalization data
     api_key = "YOUR_API_KEY"
     base_url = "https://api.notification.canada.ca"

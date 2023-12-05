@@ -398,7 +398,7 @@ def run(input_directory, output_directory, data_rules_url):
         raise e
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # Set your input directory path (where CSV files are located)
     input_directory = "input_directory_path/"
 
