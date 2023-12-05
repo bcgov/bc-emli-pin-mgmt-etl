@@ -5,7 +5,7 @@ import pytest
 from utils.gc_notify import run, gc_notify_log
 
 
-api_key = "gcntfy-vhers_test-bf3f9c9f-fcfe-45e3-aea9-bae75f93d741-ff417991-77fc-4e67-9e20-853363ef6a7e"
+api_key = "test-api-key"
 base_url = "https://api.notification.canada.ca"
 email_address = "test@test.ca"
 template_id = "templateId"
