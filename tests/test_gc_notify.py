@@ -21,7 +21,7 @@ file = "file contents"
 
 @patch(
     "notifications_python_client.notifications.NotificationsAPIClient.__init__",
-    return_value = None
+    return_value=None,
 )
 @patch(
     "notifications_python_client.notifications.NotificationsAPIClient.send_email_notification",
@@ -42,7 +42,7 @@ def test_gc_notify_log(notificationsAPIClient_mock, sendEmailNotification_mock):
 
 @patch(
     "notifications_python_client.notifications.NotificationsAPIClient.__init__",
-    return_value = None
+    return_value=None,
 )
 def test_gc_notify_log_error(notificationsAPIClient_mock):
     with open("testfile.txt", "w") as f:
