@@ -41,14 +41,14 @@ class LoggerStream:
 
     def write(self, buf):
         for line in buf.rstrip().splitlines():
-            self.logger.log(self.log_level, line.rstrip())
+            self["logger"].log(self["log_level"], line.rstrip())
 
     def flush(self):
         pass
 
 
 # Example usage:
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     log_folder = "/path/to/log_folder"  # Replace with the desired log folder path
     log_filename = "your_log_file.log"  # Replace with the desired log file name
     setup_logging(log_folder, log_filename)
