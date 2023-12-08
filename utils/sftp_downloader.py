@@ -39,6 +39,7 @@ def get_files_to_download_from_sftp(sftp, remote_path):
     try:
         latest = 0
         latestfolder = None
+        file_path_dict = {}
 
         for fileattr in sftp.listdir_attr(remote_path):
             # Compare folder timestamps for each file in directory to find latest folder
@@ -50,7 +51,6 @@ def get_files_to_download_from_sftp(sftp, remote_path):
             files_to_download = sftp.listdir(
                 f"{remote_path}{latestfolder}/{latestfolder}/"
             )
-            file_path_dict = {}
 
             for file in files_to_download:
                 file_path_dict[
@@ -125,7 +125,7 @@ def run(host, port, username, password, remote_path, local_path):
         raise e
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     host = "your_host"
     port = 22  # Replace with your port
     username = "your_username"
