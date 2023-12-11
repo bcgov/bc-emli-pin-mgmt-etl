@@ -147,10 +147,10 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         # Read, process, and write CSV files
         read_files_start_time = time.time()
 
-        # 1_title.csv
+        # EMLI_1_WKLY_TITLE.csv
         title_df = (
             pd.read_csv(
-                input_directory + "1_title.csv",
+                input_directory + "EMLI_1_WKLY_TITLE.csv",
                 usecols=[
                     "TITLE_NMBR",
                     "LTB_DISTRICT_CD",
@@ -171,7 +171,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "TTL_STTS_CD"])
         )
-        print("Read file: 1_title.csv")
+        print("Read file: EMLI_1_WKLY_TITLE.csv")
 
         title_df.rename(
             columns={
@@ -187,10 +187,10 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         title_df.to_csv(output_directory + "title_raw.csv", index=False)
         print(f"Wrote raw ltsa data to file: {output_directory+'title_raw.csv'}")
 
-        # 2_parcel.csv
+        # EMLI_2_WKLY_PARCEL.csv
         parcel_df = (
             pd.read_csv(
-                input_directory + "2_parcel.csv",
+                input_directory + "EMLI_2_WKLY_PARCEL.csv",
                 usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
                 dtype={"PRMNNT_PRCL_ID": str, "PRCL_STTS_CD": str},
             )
@@ -199,7 +199,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             .replace(np.nan, None)
             .dropna(subset=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"])
         )
-        print("Read file: 2_parcel.csv")
+        print("Read file: EMLI_2_WKLY_PARCEL.csv")
 
         parcel_df = parcel_df.rename(
             columns={"PRMNNT_PRCL_ID": "pid", "PRCL_STTS_CD": "parcel_status"}
@@ -208,10 +208,10 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
         print(f"Wrote raw LTSA data to file: {output_directory+'parcel_raw.csv'}")
 
-        # 3_titleparcel.csv
+        # EMLI_3_WKLY_TITLEPARCEL.csv
         title_parcel_df = (
             pd.read_csv(
-                input_directory + "3_titleparcel.csv",
+                input_directory + "EMLI_3_WKLY_TITLEPARCEL.csv",
                 usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
                 dtype={
                     "TITLE_NMBR": str,
@@ -224,7 +224,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"])
         )
-        print("Read file: 3_titleparcel.csv")
+        print("Read file: EMLI_3_WKLY_TITLEPARCEL.csv")
 
         title_parcel_df = title_parcel_df.rename(
             columns={
@@ -237,10 +237,10 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
         print(f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}")
 
-        # 4_titleowner.csv
+        # EMLI_4_WKLY_TITLEOWNER.csv
         title_owner_df = (
             pd.read_csv(
-                input_directory + "4_titleowner.csv",
+                input_directory + "EMLI_4_WKLY_TITLEOWNER.csv",
                 usecols=[
                     "TITLE_NMBR",
                     "LTB_DISTRICT_CD",
@@ -279,7 +279,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD"])
         )
-        print("Read file: 4_titleowner.csv")
+        print("Read file: EMLI_4_WKLY_TITLEOWNER.csv")
 
         title_owner_df = title_owner_df.rename(
             columns={
