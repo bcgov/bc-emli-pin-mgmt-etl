@@ -28,7 +28,7 @@ rawTitleparcelFileName = "titleparcel_raw.csv"
 rawTitleownerFileName = "titleowner_raw.csv"
 activePinFileName = "active_pin.csv"
 
-title_test_file = "1_title.csv"
+title_test_file = "EMLI_1_WKLY_TITLE.csv"
 title_rows = [
     [
         "TITLE_NMBR",
@@ -58,7 +58,7 @@ title_rows = [
     ],
 ]
 
-parcel_test_file = "2_parcel.csv"
+parcel_test_file = "EMLI_2_WKLY_PARCEL.csv"
 parcel_rows = [
     [
         "PRMNNT_PRCL_ID",
@@ -82,13 +82,13 @@ parcel_rows = [
     ],
 ]
 
-titleparcel_test_file = "3_titleparcel.csv"
+titleparcel_test_file = "EMILY_3_WKLY_TITLEPARCEL.csv"
 titleparcel_rows = [
     ["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
     ["AA12345E", "AB", "48445"],
 ]
 
-titleowner_test_file = "4_titleowner.csv"
+titleowner_test_file = "EMLI_4_WKLY_TITLEOWNER.csv"
 titleowner_rows = [
     [
         "TITLE_NMBR",
