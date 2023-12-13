@@ -245,7 +245,7 @@
         "CHINA": ["PEOPLES REPUBLIC OF CHINA", "REPUBLIC OF CHINA", "R.O.C."],
         "SINGAPORE": ["SINGPORE"],
         "UNITED STATES OF AMERICA": ["U.S.A", "U.S.A.", "USA", "US"],
-        "UNITED KINGDON": ["UK", "U.K.", "U.K"]
+        "UNITED KINGDOM": ["UK", "U.K.", "U.K"]
       },
       "remove_characters": [".", ",", "-", "/", "#", "'"]
     },
