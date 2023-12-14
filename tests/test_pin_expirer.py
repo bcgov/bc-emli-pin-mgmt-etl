@@ -95,9 +95,7 @@ emptyExpiredTitlesDf = pd.DataFrame(
 
 db = create_engine("sqlite:///:memory:")
 
-expireApiUrl = (
-    "https://bc-emli-pin-mgmt-be-c82b4c-dev.apps.silver.devops.gov.bc.ca/etl-expire"
-)
+expireApiUrl = "expireAPIKeyURL"
 vhersApiKey = "apikey"
 
 
@@ -158,7 +156,7 @@ def test_expire_pins_error(connect_mock, read_mock):
 def test_expire_pins_api_error(connect_mock, readsql_mock):
     create_title_csv()
     cancelledTitlesDf = create_expiration_df(inputDirectory)
-    with pytest.raises(requests.exceptions.HTTPError):
+    with pytest.raises(requests.exceptions.MissingSchema):
         expire_pins(cancelledTitlesDf, db, expireApiUrl, vhersApiKey)
     remove_csvs(["EMLI_1_WKLY_TITLE.csv"])
     assert connect_mock.called_once()
