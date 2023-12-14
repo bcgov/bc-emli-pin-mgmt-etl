@@ -217,7 +217,7 @@ def run(
 
 
 # Entry point of the script
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # Replace these placeholders with your actual values
     input_directory = "your_input_directory"  # Replace with your input directory path
     database_name = "your_database_name"  # Replace with your database name
