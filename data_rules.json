@@ -242,10 +242,11 @@
       "to_uppercase": "to_uppercase",
       "replace_exact_values": {
         "HONG KONG": ["HONGKONG", "HONG KONK"],
-        "CHINA": ["PEOPLES REPUBLIC OF CHINA", "REPUBLIC OF CHINA", "R.O.C."],
+        "CHINA": ["PEOPLES REPUBLIC OF CHINA", "REPUBLIC OF CHINA", "R.O.C.", "PRC"],
         "SINGAPORE": ["SINGPORE"],
         "UNITED STATES OF AMERICA": ["U.S.A", "U.S.A.", "USA", "US"],
-        "UNITED KINGDOM": ["UK", "U.K.", "U.K"]
+        "UNITED KINGDOM": ["UK", "U.K.", "U.K"],
+        "MALAYSIA": ["MALAYSIA 50490"]
       },
       "remove_characters": [".", ",", "-", "/", "#", "'"]
     },
