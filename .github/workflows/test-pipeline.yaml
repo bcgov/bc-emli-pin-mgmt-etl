@@ -1,4 +1,4 @@
-name: Lint
+name: Lint + Test
 
 on: [push, pull_request]
 
@@ -16,4 +16,4 @@ jobs:
       - name: Test with pytest
         run: |
           pip install pytest pytest-cov
-          python -m pytest tests/
+          pytest --cov-report=html 
