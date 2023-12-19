@@ -82,7 +82,7 @@ parcel_rows = [
     ],
 ]
 
-titleparcel_test_file = "EMILY_3_WKLY_TITLEPARCEL.csv"
+titleparcel_test_file = "EMLI_3_WKLY_TITLEPARCEL.csv"
 titleparcel_rows = [
     ["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
     ["AA12345E", "AB", "48445"],

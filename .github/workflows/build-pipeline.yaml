@@ -40,6 +40,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Test with pytest
+        run: |
+          pip install pytest pytest-cov
+          pytest tests/* --cov-report=html
+
       - name: Login Openshift
         shell: bash
         run: |

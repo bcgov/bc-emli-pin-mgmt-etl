@@ -185,7 +185,7 @@ def test_run(connect_mock, expire_mock):
 @patch("utils.pin_expirer.run", return_value=ValueError)
 def test_run_error(run_mock, connect_mock):
     create_title_csv()
-    with pytest.raises(RecursionError):
+    with pytest.raises(KeyError):
         run(inputDirectory, expireApiUrl, vhersApiKey, "databaseName")
     remove_csvs(["EMLI_1_WKLY_TITLE.csv"])
     assert run_mock.called_once()
