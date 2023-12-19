@@ -13,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v2
       - name: Test with pytest
         run: |
           pip install pytest pytest-cov
-          pytest --cov-report=html 
+          python -m pytest tests/
