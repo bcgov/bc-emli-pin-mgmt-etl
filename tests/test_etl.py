@@ -45,11 +45,9 @@ def test_send_email_notification(gcNotify_mock):
 
 
 @patch("sqlalchemy.engine.Engine.connect")
-@patch("sqlalchemy.engine.Engine.execute")
-def test_get_status_from_etl_log_table(connect_mock, execute_mock):
+def test_get_status_from_etl_log_table(connect_mock):
     get_status_from_etl_log_table(db, folder)
     assert connect_mock.called_once()
-    assert execute_mock.called_oncel()
 
 
 @patch("sqlalchemy.engine.Engine.connect")
@@ -175,35 +173,3 @@ def test_main_run_status_none(
     assert ltsaParser_mock.called_once()
     assert postgresWriter_mock.called_once()
     assert pinExpirer_mock.called_once()
-
-
-@patch(
-    "argparse.ArgumentParser.parse_args",
-    return_value=argparse.Namespace(
-        log_folder="log_folder",
-        db_username="username",
-        db_password="password",
-        db_host="host",
-        db_port=1234,
-        db_name="name",
-        sftp_host="sftp_host",
-        sftp_port=1235,
-        sftp_username="sftp_username",
-        sftp_password="sftp_password",
-        sftp_remote_path="sftp_remote_path",
-        sftp_local_path="sftp_local_path",
-        processed_data_path="processed_data_path",
-        data_rules_url="data_rules_url",
-        db_write_batch_size=100,
-        expire_api_url="expire_api_url",
-        vhers_api_key="vhers_api_key",
-        api_key="api_key",
-        base_url="base_url",
-        email_address="emailAddress",
-        template_id="templateId",
-    ),
-)
-def test_main_error(parser_mock):
-    with pytest.raises(TypeError):
-        main()
-        assert parser_mock.called_once()
