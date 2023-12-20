@@ -9,10 +9,10 @@ from utils.ltsa_parser import (
     load_data_cleaning_rules,
 )
 
-pidListMultiplePids = [123, 234, 345]
-pidListMultiplePidsParsed = "123|234|345"
-pidListOnePid = [123]
-pidListOnePidParsed = "123"
+pidListMultiplePids = ["123", "234", "345"]
+pidListMultiplePidsParsed = "000000123|000000234|000000345"
+pidListOnePid = ["123"]
+pidListOnePidParsed = "000000123"
 pidListNoPid = []
 pidListNoPidParsed = ""
 
