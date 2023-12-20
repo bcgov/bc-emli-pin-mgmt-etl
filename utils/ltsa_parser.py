@@ -8,7 +8,7 @@ import os
 
 def pid_parser(pids):
     """
-    Parses list of pids into string form.
+    Parses list of pids into string form and adds leading zeros such that each pid is 9 digits.
 
     Parameters:
     - pids (list): List of parcel ids.
@@ -16,8 +16,15 @@ def pid_parser(pids):
     Returns:
     - pids (str): String of pids in cleaned form.
     """
+    formattedPids = []
+
+    # Add leading zeros until each pid is 9 digits long
+    for pid in pids:
+        pid = pid.zfill(9)
+        formattedPids.append(pid)
+
     # Combine and format PIDs as a string
-    return "|".join(sorted(set(map(str, pids))))
+    return "|".join(sorted(set(map(str, formattedPids))))
 
 
 def load_data_cleaning_rules(data_rules_url):
