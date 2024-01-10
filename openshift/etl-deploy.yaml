@@ -35,7 +35,7 @@ objects:
     metadata:
       name: "${NAME}"
     spec:
-      schedule: "*/5 * * * *"
+      schedule: "0 3 * * SAT"
       startingDeadlineSeconds: 3600
       concurrencyPolicy: Forbid
       successfulJobsHistoryLimit: 3
