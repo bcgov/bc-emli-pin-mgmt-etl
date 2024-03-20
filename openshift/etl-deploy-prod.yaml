@@ -1,0 +1,66 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: etl-cronjob-template
+parameters:
+  - name: PVC_SIZE
+    description: Size of the PersistentVolumeClaim
+    value: "256Mi"
+  - name: NAME
+    description: Name of the CronJob
+    required: true
+  - name: CPU_REQUEST
+    value: "25m"
+  - name: MEMORY_REQUEST
+    value: "50Mi"
+  - name: CPU_LIMIT
+    value: "75m"
+  - name: MEMORY_LIMIT
+    value: "150Mi"
+
+objects:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: data
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: "${PVC_SIZE}"
+
+  - apiVersion: batch/v1
+    kind: CronJob
+    metadata:
+      name: "${NAME}"
+    spec:
+      schedule: "0 3 * * SAT"
+      startingDeadlineSeconds: 3600
+      concurrencyPolicy: Forbid
+      successfulJobsHistoryLimit: 3
+      failedJobsHistoryLimit: 3
+      jobTemplate:
+        spec:
+          template:
+            spec:
+              volumes:
+              - name: data
+                persistentVolumeClaim:
+                  claimName: data 
+              containers:
+              - name: etl-container
+                image: 'image-registry.openshift-image-registry.svc:5000/c82b4c-prod/bc-emli-pin-mgmt-etl:latest'
+                imagePullPolicy: Always
+                resources:
+                  limits:
+                    memory: "${MEMORY_LIMIT}"
+                    cpu: "${CPU_LIMIT}"
+                  requests:
+                    memory: "${MEMORY_REQUEST}"
+                    cpu: "${CPU_REQUEST}"
+                volumeMounts:
+                - name: data
+                  mountPath: /data
+              restartPolicy: OnFailure
+
