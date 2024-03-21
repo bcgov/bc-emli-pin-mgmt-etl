@@ -153,7 +153,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     try:
         # Read, process, and write CSV files
         read_files_start_time = time.time()
-        
+
         # Read validPIDs file
         valid_pid_df = (
             pd.read_csv(
@@ -169,7 +169,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         )
 
         # Remove leading zeros from pid
-        valid_pid_df['pid'] = valid_pid_df['pid'].str.lstrip('0')
+        valid_pid_df["pid"] = valid_pid_df["pid"].str.lstrip("0")
 
         print(valid_pid_df)
         print("Read file: VALID_PIDS.csv")
@@ -203,7 +203,6 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
         print(f"Wrote raw LTSA data to file: {output_directory+'parcel_raw.csv'}")
 
-
         # EMLI_3_WKLY_TITLEPARCEL.csv
         title_parcel_df = (
             pd.read_csv(
@@ -233,11 +232,12 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         # Filter parcel dataframe by valid_pid dataframe
         title_parcel_df_keys = list(title_parcel_df.columns.values)
         title_parcel_df_index = title_parcel_df.set_index(valid_pid_df_keys).index
-        title_parcel_df = title_parcel_df[title_parcel_df_index.isin(valid_pid_df_index)]
+        title_parcel_df = title_parcel_df[
+            title_parcel_df_index.isin(valid_pid_df_index)
+        ]
 
         title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
         print(f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}")
-
 
         # EMLI_1_WKLY_TITLE.csv
         title_df = (
@@ -277,10 +277,12 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         )
 
         # Filter parcel dataframe by title_parcel dataframe
-        title_parcel_df_keys.remove('pid')
+        title_parcel_df_keys.remove("pid")
         title_df_index = title_df.set_index(title_parcel_df_keys).index
-        title_parcel_without_pid_df = title_parcel_df.drop(['pid'], axis=1)
-        title_parcel_df_without_pid_index = title_parcel_without_pid_df.set_index(title_parcel_df_keys).index
+        title_parcel_without_pid_df = title_parcel_df.drop(["pid"], axis=1)
+        title_parcel_df_without_pid_index = title_parcel_without_pid_df.set_index(
+            title_parcel_df_keys
+        ).index
         title_df = title_df[title_df_index.isin(title_parcel_df_without_pid_index)]
 
         title_df.to_csv(output_directory + "title_raw.csv", index=False)
@@ -351,7 +353,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
 
         # Filter parcel dataframe by title_parcel dataframe
         title_owner_df_index = title_owner_df.set_index(title_parcel_df_keys).index
-        title_owner_df = title_owner_df[title_owner_df_index.isin(title_parcel_df_without_pid_index)]
+        title_owner_df = title_owner_df[
+            title_owner_df_index.isin(title_parcel_df_without_pid_index)
+        ]
 
         title_owner_df.to_csv(output_directory + "titleowner_raw.csv", index=False)
         read_files_elapsed_time = time.time() - read_files_start_time
