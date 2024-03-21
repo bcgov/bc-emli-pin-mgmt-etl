@@ -153,6 +153,91 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     try:
         # Read, process, and write CSV files
         read_files_start_time = time.time()
+        
+        # Read validPIDs file
+        valid_pid_df = (
+            pd.read_csv(
+                input_directory + "VALID_PIDS.csv",
+                usecols=[0],
+                names=["pid"],
+                dtype={"pid": str},
+                header=None,
+            )
+            .applymap(lambda x: x.strip() if isinstance(x, str) else x)
+            .replace("", None)
+            .replace(np.nan, None)
+        )
+
+        # Remove leading zeros from pid
+        valid_pid_df['pid'] = valid_pid_df['pid'].str.lstrip('0')
+
+        print(valid_pid_df)
+        print("Read file: VALID_PIDS.csv")
+
+        valid_pid_df_keys = list(valid_pid_df.columns.values)
+        valid_pid_df_index = valid_pid_df.set_index(valid_pid_df_keys).index
+
+        # EMLI_2_WKLY_PARCEL.csv
+        parcel_df = (
+            pd.read_csv(
+                input_directory + "EMLI_2_WKLY_PARCEL.csv",
+                usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
+                dtype={"PRMNNT_PRCL_ID": str, "PRCL_STTS_CD": str},
+            )
+            .applymap(lambda x: x.strip() if isinstance(x, str) else x)
+            .replace("", None)
+            .replace(np.nan, None)
+            .dropna(subset=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"])
+        )
+
+        print("Read file: EMLI_2_WKLY_PARCEL.csv")
+
+        parcel_df = parcel_df.rename(
+            columns={"PRMNNT_PRCL_ID": "pid", "PRCL_STTS_CD": "parcel_status"}
+        )
+
+        # Filter parcel dataframe by valid_pid dataframe
+        parcel_df_index = parcel_df.set_index(valid_pid_df_keys).index
+        parcel_df = parcel_df[parcel_df_index.isin(valid_pid_df_index)]
+
+        parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
+        print(f"Wrote raw LTSA data to file: {output_directory+'parcel_raw.csv'}")
+
+
+        # EMLI_3_WKLY_TITLEPARCEL.csv
+        title_parcel_df = (
+            pd.read_csv(
+                input_directory + "EMLI_3_WKLY_TITLEPARCEL.csv",
+                usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
+                dtype={
+                    "TITLE_NMBR": str,
+                    "LTB_DISTRICT_CD": str,
+                    "PRMNNT_PRCL_ID": str,
+                },
+            )
+            .applymap(lambda x: x.strip() if isinstance(x, str) else x)
+            .replace("", None)
+            .replace(np.nan, None)
+            .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"])
+        )
+        print("Read file: EMLI_3_WKLY_TITLEPARCEL.csv")
+
+        title_parcel_df = title_parcel_df.rename(
+            columns={
+                "TITLE_NMBR": "title_number",
+                "LTB_DISTRICT_CD": "land_title_district",
+                "PRMNNT_PRCL_ID": "pid",
+            }
+        )
+
+        # Filter parcel dataframe by valid_pid dataframe
+        title_parcel_df_keys = list(title_parcel_df.columns.values)
+        title_parcel_df_index = title_parcel_df.set_index(valid_pid_df_keys).index
+        title_parcel_df = title_parcel_df[title_parcel_df_index.isin(valid_pid_df_index)]
+
+        title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
+        print(f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}")
+
 
         # EMLI_1_WKLY_TITLE.csv
         title_df = (
@@ -191,58 +276,15 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             inplace=True,
         )
 
+        # Filter parcel dataframe by title_parcel dataframe
+        title_parcel_df_keys.remove('pid')
+        title_df_index = title_df.set_index(title_parcel_df_keys).index
+        title_parcel_without_pid_df = title_parcel_df.drop(['pid'], axis=1)
+        title_parcel_df_without_pid_index = title_parcel_without_pid_df.set_index(title_parcel_df_keys).index
+        title_df = title_df[title_df_index.isin(title_parcel_df_without_pid_index)]
+
         title_df.to_csv(output_directory + "title_raw.csv", index=False)
         print(f"Wrote raw ltsa data to file: {output_directory+'title_raw.csv'}")
-
-        # EMLI_2_WKLY_PARCEL.csv
-        parcel_df = (
-            pd.read_csv(
-                input_directory + "EMLI_2_WKLY_PARCEL.csv",
-                usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
-                dtype={"PRMNNT_PRCL_ID": str, "PRCL_STTS_CD": str},
-            )
-            .applymap(lambda x: x.strip() if isinstance(x, str) else x)
-            .replace("", None)
-            .replace(np.nan, None)
-            .dropna(subset=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"])
-        )
-        print("Read file: EMLI_2_WKLY_PARCEL.csv")
-
-        parcel_df = parcel_df.rename(
-            columns={"PRMNNT_PRCL_ID": "pid", "PRCL_STTS_CD": "parcel_status"}
-        )
-
-        parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
-        print(f"Wrote raw LTSA data to file: {output_directory+'parcel_raw.csv'}")
-
-        # EMLI_3_WKLY_TITLEPARCEL.csv
-        title_parcel_df = (
-            pd.read_csv(
-                input_directory + "EMLI_3_WKLY_TITLEPARCEL.csv",
-                usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
-                dtype={
-                    "TITLE_NMBR": str,
-                    "LTB_DISTRICT_CD": str,
-                    "PRMNNT_PRCL_ID": str,
-                },
-            )
-            .applymap(lambda x: x.strip() if isinstance(x, str) else x)
-            .replace("", None)
-            .replace(np.nan, None)
-            .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"])
-        )
-        print("Read file: EMLI_3_WKLY_TITLEPARCEL.csv")
-
-        title_parcel_df = title_parcel_df.rename(
-            columns={
-                "TITLE_NMBR": "title_number",
-                "LTB_DISTRICT_CD": "land_title_district",
-                "PRMNNT_PRCL_ID": "pid",
-            }
-        )
-
-        title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
-        print(f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}")
 
         # EMLI_4_WKLY_TITLEOWNER.csv
         title_owner_df = (
@@ -307,10 +349,12 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
             }
         )
 
+        # Filter parcel dataframe by title_parcel dataframe
+        title_owner_df_index = title_owner_df.set_index(title_parcel_df_keys).index
+        title_owner_df = title_owner_df[title_owner_df_index.isin(title_parcel_df_without_pid_index)]
+
         title_owner_df.to_csv(output_directory + "titleowner_raw.csv", index=False)
-
         read_files_elapsed_time = time.time() - read_files_start_time
-
         print(
             f"Wrote raw LTSA data to file: {output_directory+'titleowner_raw.csv'}. Elapsed Time: {read_files_elapsed_time:.2f} seconds"
         )
