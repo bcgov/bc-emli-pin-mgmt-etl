@@ -27,6 +27,7 @@ rawParcelFileName = "parcel_raw.csv"
 rawTitleparcelFileName = "titleparcel_raw.csv"
 rawTitleownerFileName = "titleowner_raw.csv"
 activePinFileName = "active_pin.csv"
+validPidFileName = "VALID_PIDS.csv"
 
 title_test_file = "EMLI_1_WKLY_TITLE.csv"
 title_rows = [
@@ -134,6 +135,12 @@ titleowner_rows = [
     ],
 ]
 
+validpid_test_file = "VALID_PIDS.csv"
+validpid_rows = [
+    [],
+    ["48445"],
+]
+
 
 def create_csvs():
     with open(inputDirectory + title_test_file, "w", newline="") as csv_file:
@@ -151,6 +158,10 @@ def create_csvs():
     with open(inputDirectory + titleowner_test_file, "w", newline="") as csv_file:
         writer = csv.writer(csv_file, dialect="excel")
         writer.writerows(titleowner_rows)
+
+    with open(inputDirectory + validpid_test_file, "w", newline="") as csv_file:
+        writer = csv.writer(csv_file, dialect="excel")
+        writer.writerows(validpid_rows)
 
 
 def remove_csvs(listOfFiles):
@@ -178,6 +189,7 @@ def test_parse_ltsa_files():
             rawTitleparcelFileName,
             rawTitleownerFileName,
             activePinFileName,
+            validPidFileName,
         ]
     )
 
@@ -198,6 +210,7 @@ def test_parse_ltsa_files_error(clean_mock):
             rawParcelFileName,
             rawTitleparcelFileName,
             rawTitleownerFileName,
+            validPidFileName,
         ]
     )
 
