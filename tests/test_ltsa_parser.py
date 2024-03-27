@@ -9,24 +9,25 @@ from utils.ltsa_parser import (
     load_data_cleaning_rules,
 )
 
-pidListMultiplePids = ["123", "234", "345"]
-pidListMultiplePidsParsed = "000000123|000000234|000000345"
-pidListOnePid = ["123"]
-pidListOnePidParsed = "000000123"
-pidListNoPid = []
-pidListNoPidParsed = ""
+pid_list_multiple_pids = ["123", "234", "345"]
+pid_list_multiple_pids_parsed = "000000123|000000234|000000345"
+pid_list_one_pid = ["123"]
+pid_list_one_pid_parsed = "000000123"
+pid_list_no_pid = []
+pid_list_no_pid_parsed = ""
 
-inputDirectory = ""
-outputDirectory = ""
-dataRulesUrl = (
+input_directory = ""
+output_directory = ""
+data_rules_url = (
     "https://raw.githubusercontent.com/bcgov/bc-emli-pin-mgmt-etl/main/data_rules.json"
 )
 
-rawTitleFileName = "title_raw.csv"
-rawParcelFileName = "parcel_raw.csv"
-rawTitleparcelFileName = "titleparcel_raw.csv"
-rawTitleownerFileName = "titleowner_raw.csv"
-activePinFileName = "active_pin.csv"
+raw_title_file_name = "title_raw.csv"
+raw_parcel_file_name = "parcel_raw.csv"
+raw_titleparcel_file_name = "titleparcel_raw.csv"
+raw_titleowner_file_name = "titleowner_raw.csv"
+active_pin_file_name = "active_pin.csv"
+valid_pid_file_name = "valid_pids.csv"
 
 title_test_file = "EMLI_1_WKLY_TITLE.csv"
 title_rows = [
@@ -134,23 +135,33 @@ titleowner_rows = [
     ],
 ]
 
+validpid_test_file = "valid_pids.csv"
+validpid_rows = [
+    [],
+    ["48445"],
+]
+
 
 def create_csvs():
-    with open(inputDirectory + title_test_file, "w", newline="") as csv_file:
+    with open(input_directory + title_test_file, "w", newline="") as csv_file:
         writer = csv.writer(csv_file, dialect="excel")
         writer.writerows(title_rows)
 
-    with open(inputDirectory + parcel_test_file, "w", newline="") as csv_file:
+    with open(input_directory + parcel_test_file, "w", newline="") as csv_file:
         writer = csv.writer(csv_file, dialect="excel")
         writer.writerows(parcel_rows)
 
-    with open(inputDirectory + titleparcel_test_file, "w", newline="") as csv_file:
+    with open(input_directory + titleparcel_test_file, "w", newline="") as csv_file:
         writer = csv.writer(csv_file, dialect="excel")
         writer.writerows(titleparcel_rows)
 
-    with open(inputDirectory + titleowner_test_file, "w", newline="") as csv_file:
+    with open(input_directory + titleowner_test_file, "w", newline="") as csv_file:
         writer = csv.writer(csv_file, dialect="excel")
         writer.writerows(titleowner_rows)
+
+    with open(input_directory + validpid_test_file, "w", newline="") as csv_file:
+        writer = csv.writer(csv_file, dialect="excel")
+        writer.writerows(validpid_rows)
 
 
 def remove_csvs(listOfFiles):
@@ -159,25 +170,26 @@ def remove_csvs(listOfFiles):
 
 
 def test_pid_parser():
-    assert pid_parser(pidListMultiplePids) == pidListMultiplePidsParsed
-    assert pid_parser(pidListOnePid) == pidListOnePidParsed
-    assert pid_parser(pidListNoPid) == pidListNoPidParsed
+    assert pid_parser(pid_list_multiple_pids) == pid_list_multiple_pids_parsed
+    assert pid_parser(pid_list_one_pid) == pid_list_one_pid_parsed
+    assert pid_parser(pid_list_no_pid) == pid_list_no_pid_parsed
 
 
 def test_parse_ltsa_files():
     create_csvs()
-    parse_ltsa_files(inputDirectory, outputDirectory, dataRulesUrl)
+    parse_ltsa_files(input_directory, output_directory, data_rules_url)
     remove_csvs(
         [
             title_test_file,
             parcel_test_file,
             titleparcel_test_file,
             titleowner_test_file,
-            rawTitleFileName,
-            rawParcelFileName,
-            rawTitleparcelFileName,
-            rawTitleownerFileName,
-            activePinFileName,
+            raw_title_file_name,
+            raw_parcel_file_name,
+            raw_titleparcel_file_name,
+            raw_titleowner_file_name,
+            active_pin_file_name,
+            valid_pid_file_name,
         ]
     )
 
@@ -186,7 +198,7 @@ def test_parse_ltsa_files():
 def test_parse_ltsa_files_error(clean_mock):
     create_csvs()
     with pytest.raises(ValueError):
-        parse_ltsa_files(inputDirectory, outputDirectory, dataRulesUrl)
+        parse_ltsa_files(input_directory, output_directory, data_rules_url)
     assert clean_mock.calledOnce()
     remove_csvs(
         [
@@ -194,22 +206,23 @@ def test_parse_ltsa_files_error(clean_mock):
             parcel_test_file,
             titleparcel_test_file,
             titleowner_test_file,
-            rawTitleFileName,
-            rawParcelFileName,
-            rawTitleparcelFileName,
-            rawTitleownerFileName,
+            raw_title_file_name,
+            raw_parcel_file_name,
+            raw_titleparcel_file_name,
+            raw_titleowner_file_name,
+            valid_pid_file_name,
         ]
     )
 
 
 def test_load_data_cleaning_rules():
-    dataCleaningRules = load_data_cleaning_rules(dataRulesUrl)
+    dataCleaningRules = load_data_cleaning_rules(data_rules_url)
     assert type(dataCleaningRules) == dict
 
 
 @patch("utils.ltsa_parser.parse_ltsa_files")
 @patch("os.makedirs")
 def test_run(parser_mock, makedirs_mock):
-    run(inputDirectory, outputDirectory, dataRulesUrl)
+    run(input_directory, output_directory, data_rules_url)
     assert parser_mock.calledOnce()
     assert makedirs_mock.calledOnce()
