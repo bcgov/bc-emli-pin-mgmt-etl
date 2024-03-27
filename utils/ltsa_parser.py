@@ -154,10 +154,10 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         # Read, process, and write CSV files
         read_files_start_time = time.time()
 
-        # VALID_PIDS.csv
+        # valid_pids.csv
         valid_pid_df = (
             pd.read_csv(
-                input_directory + "VALID_PIDS.csv",
+                input_directory + "valid_pids.csv",
                 usecols=[0],
                 names=["pid"],
                 dtype={"pid": str},
@@ -171,7 +171,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         # Remove leading zeros from pid to match LTSA data
         valid_pid_df["pid"] = valid_pid_df["pid"].str.lstrip("0")
 
-        print("Read file: VALID_PIDS.csv")
+        print("Read file: valid_pids.csv")
 
         # Creating an index of valid PIDs
         valid_pid_df_keys = list(valid_pid_df.columns.values)

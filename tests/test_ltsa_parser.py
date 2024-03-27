@@ -27,7 +27,7 @@ rawParcelFileName = "parcel_raw.csv"
 rawTitleparcelFileName = "titleparcel_raw.csv"
 rawTitleownerFileName = "titleowner_raw.csv"
 activePinFileName = "active_pin.csv"
-validPidFileName = "VALID_PIDS.csv"
+validPidFileName = "valid_pids.csv"
 
 title_test_file = "EMLI_1_WKLY_TITLE.csv"
 title_rows = [
@@ -135,7 +135,7 @@ titleowner_rows = [
     ],
 ]
 
-validpid_test_file = "VALID_PIDS.csv"
+validpid_test_file = "valid_pids.csv"
 validpid_rows = [
     [],
     ["48445"],
