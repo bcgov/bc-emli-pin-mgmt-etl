@@ -16,15 +16,15 @@ def pid_parser(pids):
     Returns:
     - pids (str): String of pids in cleaned form.
     """
-    formattedPids = []
+    formatted_pids = []
 
     # Add leading zeros until each pid is 9 digits long
     for pid in pids:
         pid = pid.zfill(9)
-        formattedPids.append(pid)
+        formatted_pids.append(pid)
 
     # Combine and format PIDs as a string
-    return "|".join(sorted(set(map(str, formattedPids))))
+    return "|".join(sorted(set(map(str, formatted_pids))))
 
 
 def load_data_cleaning_rules(data_rules_url):
