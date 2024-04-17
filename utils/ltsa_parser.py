@@ -138,7 +138,7 @@ def clean_active_pin_df(active_pin_df, output_directory, data_rules_url):
         raise e(f"Failed to clean active_pin dataframe")
 
 
-def parse_ltsa_files(input_directory, output_directory, data_rules_url):
+def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
     """
     Reads raw LTSA files to CSVs and writes them to output_directory. Writes processed and cleaned data to active_pin.csv.
 
@@ -146,6 +146,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
     - input_directory (str): Directory to read LTSA CSV files from.
     - output_directory (str): Directory to write CSV files to.
     - data_rules_url (str): URL to data_rules.json file hosted on github.
+    - engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
 
     Returns:
     - None
@@ -154,28 +155,16 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         # Read, process, and write CSV files
         read_files_start_time = time.time()
 
-        # valid_pids.csv
-        valid_pid_df = (
-            pd.read_csv(
-                input_directory + "valid_pids.csv",
-                usecols=[0],
-                names=["pid"],
-                dtype={"pid": str},
-                header=None,
-            )
-            .applymap(lambda x: x.strip() if isinstance(x, str) else x)
-            .replace("", None)
-            .replace(np.nan, None)
-        )
+        # Read valid_pid table from database and create dataframe
+        valid_pid_df = pd.read_sql_table(
+            "valid_pid", engine, index_col=False, columns=["pid"]
+        ).applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
         # Remove leading zeros from pid to match LTSA data
-        valid_pid_df["pid"] = valid_pid_df["pid"].str.lstrip("0")
+        valid_pid_df["pid"] = valid_pid_df["pid"].astype(str)
+        print("Read table: valid_pid")
 
-        print("Read file: valid_pids.csv")
-
-        # Creating an index of valid PIDs
-        valid_pid_df_keys = list(valid_pid_df.columns.values)
-        valid_pid_df_index = valid_pid_df.set_index(valid_pid_df_keys).index
+        valid_pid_df_index = valid_pid_df.set_index(["pid"]).index
 
         # EMLI_2_WKLY_PARCEL.csv
         parcel_df = (
@@ -198,7 +187,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
 
         # Filter parcel dataframe by valid_pid dataframe:
         # Creating an index of PIDs inside parcel_df
-        parcel_df_index = parcel_df.set_index(valid_pid_df_keys).index
+        parcel_df_index = parcel_df.set_index(["pid"]).index
 
         # Updating parcel_df to only include rows with PIDs included in valid_pid_df
         parcel_df = parcel_df[parcel_df_index.isin(valid_pid_df_index)]
@@ -239,7 +228,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         title_parcel_df_keys = list(title_parcel_df.columns.values)
 
         # Creating index of PIDs inside of title_parcel_df
-        title_parcel_df_index = title_parcel_df.set_index(valid_pid_df_keys).index
+        title_parcel_df_index = title_parcel_df.set_index(["pid"]).index
 
         # Updating title_parcel_df to only include rows with PIDs included in valid_pid_df
         title_parcel_df = title_parcel_df[
@@ -448,7 +437,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url):
         raise e
 
 
-def run(input_directory, output_directory, data_rules_url):
+def run(input_directory, output_directory, data_rules_url, engine):
     """
     Reads raw LTSA files to CSVs and writes them to output_directory. Writes processed and cleaned data to active_pin.csv.
 
@@ -456,6 +445,7 @@ def run(input_directory, output_directory, data_rules_url):
     - input_directory (str): Directory to read LTSA CSV files from.
     - output_directory (str): Directory to write CSV files to.
     - data_rules_url (str): URL to data_rules.json file hosted on github.
+    - engine (sqlalchemy.engine.base.Engine): SQLAlchemy engine for database connection.
 
     Returns:
     - None
@@ -467,7 +457,7 @@ def run(input_directory, output_directory, data_rules_url):
             os.makedirs(output_directory)
 
         # Parse the files
-        parse_ltsa_files(input_directory, output_directory, data_rules_url)
+        parse_ltsa_files(input_directory, output_directory, data_rules_url, engine)
 
         end_time = time.time()
         total_time = end_time - start_time

@@ -317,6 +317,7 @@ def main():
                 input_directory=args.sftp_local_path,
                 output_directory=args.processed_data_path,
                 data_rules_url=args.data_rules_url,
+                engine=engine,
             )
 
             parser_elapsed_time = time.time() - parser_start_time
