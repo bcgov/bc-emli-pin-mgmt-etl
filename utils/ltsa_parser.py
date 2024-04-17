@@ -156,14 +156,13 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
         read_files_start_time = time.time()
 
         # Read valid_pid table from database and create dataframe
-        valid_pid_df = pd.read_sql_table(
-            "valid_pid", engine, index_col=False, columns=["pid"]
-        ).applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        valid_pid_df = pd.read_sql_table("valid_pid", engine, columns=["pid"])
 
         # Remove leading zeros from pid to match LTSA data
         valid_pid_df["pid"] = valid_pid_df["pid"].astype(str)
         print("Read table: valid_pid")
 
+        # Creating an index of valid PIDs
         valid_pid_df_index = valid_pid_df.set_index(["pid"]).index
 
         # EMLI_2_WKLY_PARCEL.csv
