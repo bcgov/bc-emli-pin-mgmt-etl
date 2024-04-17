@@ -1,7 +1,9 @@
 import csv
 import os
 from unittest.mock import patch
+import pandas as pd
 import pytest
+from sqlalchemy import create_engine
 from utils.ltsa_parser import (
     pid_parser,
     parse_ltsa_files,
@@ -22,12 +24,13 @@ data_rules_url = (
     "https://raw.githubusercontent.com/bcgov/bc-emli-pin-mgmt-etl/main/data_rules.json"
 )
 
+db = create_engine("sqlite:///:memory:")
+
 raw_title_file_name = "title_raw.csv"
 raw_parcel_file_name = "parcel_raw.csv"
 raw_titleparcel_file_name = "titleparcel_raw.csv"
 raw_titleowner_file_name = "titleowner_raw.csv"
 active_pin_file_name = "active_pin.csv"
-valid_pid_file_name = "valid_pids.csv"
 
 title_test_file = "EMLI_1_WKLY_TITLE.csv"
 title_rows = [
@@ -135,11 +138,11 @@ titleowner_rows = [
     ],
 ]
 
-validpid_test_file = "valid_pids.csv"
-validpid_rows = [
-    [],
-    ["48445"],
-]
+valid_pid_df = pd.DataFrame(
+    data={
+        "pid": ["48445"],
+    }
+)
 
 
 def create_csvs():
@@ -159,10 +162,6 @@ def create_csvs():
         writer = csv.writer(csv_file, dialect="excel")
         writer.writerows(titleowner_rows)
 
-    with open(input_directory + validpid_test_file, "w", newline="") as csv_file:
-        writer = csv.writer(csv_file, dialect="excel")
-        writer.writerows(validpid_rows)
-
 
 def remove_csvs(listOfFiles):
     for file in listOfFiles:
@@ -175,9 +174,11 @@ def test_pid_parser():
     assert pid_parser(pid_list_no_pid) == pid_list_no_pid_parsed
 
 
-def test_parse_ltsa_files():
+@patch("pandas.read_sql_table", return_value=valid_pid_df)
+def test_parse_ltsa_files(read_sql_table_mock):
     create_csvs()
-    parse_ltsa_files(input_directory, output_directory, data_rules_url)
+    parse_ltsa_files(input_directory, output_directory, data_rules_url, db)
+    assert read_sql_table_mock.calledOnce()
     remove_csvs(
         [
             title_test_file,
@@ -189,17 +190,18 @@ def test_parse_ltsa_files():
             raw_titleparcel_file_name,
             raw_titleowner_file_name,
             active_pin_file_name,
-            valid_pid_file_name,
         ]
     )
 
 
 @patch("utils.ltsa_parser.clean_active_pin_df", side_effect=ValueError)
-def test_parse_ltsa_files_error(clean_mock):
+@patch("pandas.read_sql_table", return_value=valid_pid_df)
+def test_parse_ltsa_files_error(clean_mock, read_sql_table_mock):
     create_csvs()
     with pytest.raises(ValueError):
-        parse_ltsa_files(input_directory, output_directory, data_rules_url)
+        parse_ltsa_files(input_directory, output_directory, data_rules_url, db)
     assert clean_mock.calledOnce()
+    assert read_sql_table_mock.calledOnce()
     remove_csvs(
         [
             title_test_file,
@@ -210,7 +212,6 @@ def test_parse_ltsa_files_error(clean_mock):
             raw_parcel_file_name,
             raw_titleparcel_file_name,
             raw_titleowner_file_name,
-            valid_pid_file_name,
         ]
     )
 
@@ -223,6 +224,6 @@ def test_load_data_cleaning_rules():
 @patch("utils.ltsa_parser.parse_ltsa_files")
 @patch("os.makedirs")
 def test_run(parser_mock, makedirs_mock):
-    run(input_directory, output_directory, data_rules_url)
+    run(input_directory, output_directory, data_rules_url, db)
     assert parser_mock.calledOnce()
     assert makedirs_mock.calledOnce()
