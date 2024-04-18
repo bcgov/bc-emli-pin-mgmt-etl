@@ -7,18 +7,18 @@ from datetime import datetime
 
 def create_expiration_df(input_directory):
     """
-    Finds cancelled titles from LTSA EMLI_1_WKLY_TITLE.csv file, and writes titles to dataframe.
+    Finds cancelled titles from LTSA  1_title.csv file, and writes titles to dataframe.
 
     Parameters:
-    - input_directory (str): Directory to read LTSA EMLI_1_WKLY_TITLE.csv file from.
+    - input_directory (str): Directory to read LTSA  1_title.csv file from.
 
     Returns:
     - cancelled_titles_df (pd.Dataframe): Dataframe containing cancelled titles with columns title_number and title_status.
     """
     try:
-        # Read EMLI_1_WKLY_TITLE.csv
+        # Read  1_title.csv
         title_df = pd.read_csv(
-            input_directory + "EMLI_1_WKLY_TITLE.csv",
+            input_directory + " 1_title.csv",
             usecols=[
                 "TITLE_NMBR",
                 "TTL_STTS_CD",
@@ -28,7 +28,7 @@ def create_expiration_df(input_directory):
                 "TTL_STTS_CD": str,
             },
         ).applymap(lambda x: x.strip() if isinstance(x, str) else x)
-        print("Read file: EMLI_1_WKLY_TITLE.csv")
+        print("Read file:  1_title.csv")
 
         title_df.rename(
             columns={
@@ -119,11 +119,11 @@ def run(
     password="your_password",
 ):
     """
-    Finds cancelled titles from LTSA EMLI_1_WKLY_TITLE.csv file, and writes titles to dataframe. Reads expired_titles_df.
+    Finds cancelled titles from LTSA  1_title.csv file, and writes titles to dataframe. Reads expired_titles_df.
     For each cancelled title, the database is queried for the corresponding live_pin_id(s). Then the Expire PIN API is called.
 
     Parameters:
-    - input_directory (str): Directory to read LTSA EMLI_1_WKLY_TITLE.csv file from.
+    - input_directory (str): Directory to read LTSA  1_title.csv file from.
     - expire_api_url (str): Path for Expire PIN API endpoint.
     - vhers_api_key (str): API Key for Expire PIN API endpoint.
     - database_name (str): The name of the PostgreSQL database.
