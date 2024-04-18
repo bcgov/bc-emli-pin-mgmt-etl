@@ -50,16 +50,16 @@ def get_files_to_download_from_sftp(sftp, remote_path):
         if latestfolder is not None:
             innerLatestFolder = latestfolder.replace("_Weekly", "")
             files_to_download = sftp.listdir(
-                f"{remote_path}{latestfolder}/{innerLatestFolder}/"
+                f"{remote_path}{latestfolder}/"
             )
 
             for file in files_to_download:
                 file_path_dict[file] = (
-                    f"{remote_path}{latestfolder}/{innerLatestFolder}/{file}"
+                    f"{remote_path}{latestfolder}/{file}"
                 )
 
             file_path_dict["folder_path"] = (
-                f"{remote_path}{latestfolder}/{innerLatestFolder}/"
+                f"{remote_path}{latestfolder}/"
             )
 
         else:
