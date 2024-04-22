@@ -9,7 +9,7 @@ import pytest
 
 inputDirectory = ""
 
-title_test_file = " 20240417-Title.csv"
+title_test_file = "20240417-Title.csv"
 title_rows = [
     [
         "TITLE_NMBR",
@@ -115,7 +115,7 @@ def test_create_expiration_df():
     cancelledTitlesDf = create_expiration_df(inputDirectory)
     assert type(cancelledTitlesDf) == pd.core.frame.DataFrame
     assert len(cancelledTitlesDf.index) == 1
-    remove_csvs([" 20240417-Title.csv"])
+    remove_csvs(["20240417-Title.csv"])
 
 
 @patch("pandas.read_csv", return_value=ValueError)
@@ -123,7 +123,7 @@ def test_create_expiration_df_error(readcsv_mock):
     create_title_csv()
     with pytest.raises(AttributeError):
         create_expiration_df(inputDirectory)
-    remove_csvs([" 20240417-Title.csv"])
+    remove_csvs(["20240417-Title.csv"])
     assert readcsv_mock.called_once()
 
 
@@ -146,7 +146,7 @@ def test_expire_pins_error(connect_mock, read_mock):
     cancelledTitlesDf = create_expiration_df(inputDirectory)
     with pytest.raises(TypeError):
         expire_pins(cancelledTitlesDf, db, expireApiUrl, vhersApiKey)
-    remove_csvs([" 20240417-Title.csv"])
+    remove_csvs(["20240417-Title.csv"])
     assert connect_mock.called_once()
     assert read_mock.called_once()
 
@@ -158,7 +158,7 @@ def test_expire_pins_api_error(connect_mock, readsql_mock):
     cancelledTitlesDf = create_expiration_df(inputDirectory)
     with pytest.raises(requests.exceptions.MissingSchema):
         expire_pins(cancelledTitlesDf, db, expireApiUrl, vhersApiKey)
-    remove_csvs([" 20240417-Title.csv"])
+    remove_csvs(["20240417-Title.csv"])
     assert connect_mock.called_once()
     assert readsql_mock.called_once()
 
@@ -176,7 +176,7 @@ def test_expire_pins_empty_df(connect_mock, readsql_mock):
 def test_run(connect_mock, expire_mock):
     create_title_csv()
     run(inputDirectory, expireApiUrl, vhersApiKey, "databaseName")
-    remove_csvs([" 20240417-Title.csv"])
+    remove_csvs(["20240417-Title.csv"])
     assert connect_mock.called_once()
     assert expire_mock.called_once()
 
@@ -187,6 +187,6 @@ def test_run_error(run_mock, connect_mock):
     create_title_csv()
     with pytest.raises(KeyError):
         run(inputDirectory, expireApiUrl, vhersApiKey, "databaseName")
-    remove_csvs([" 20240417-Title.csv"])
+    remove_csvs(["20240417-Title.csv"])
     assert run_mock.called_once()
     assert connect_mock.called_once()

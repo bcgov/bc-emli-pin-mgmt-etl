@@ -239,10 +239,10 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
         title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
         print(f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}")
 
-        #  20240417-Title.csv
+        # 20240417-Title.csv
         title_df = (
             pd.read_csv(
-                input_directory + " 20240417-Title.csv",
+                input_directory + "20240417-Title.csv",
                 usecols=[
                     "TITLE_NMBR",
                     "LTB_DISTRICT_CD",
@@ -263,7 +263,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "TTL_STTS_CD"])
         )
-        print("Read file:  20240417-Title.csv")
+        print("Read file: 20240417-Title.csv")
 
         title_df.rename(
             columns={
@@ -294,7 +294,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
         # Updating title_df to only include rows with valid title numbers and valid land title districts included in title_parcel_df
         title_df = title_df[title_df_index.isin(title_parcel_df_without_pid_index)]
 
-        print(f"Filtered data from  20240417-Title.csv")
+        print(f"Filtered data from 20240417-Title.csv")
 
         title_df.to_csv(output_directory + "title_raw.csv", index=False)
         print(f"Wrote raw ltsa data to file: {output_directory+'title_raw.csv'}")
