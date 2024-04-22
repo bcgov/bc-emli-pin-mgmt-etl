@@ -76,15 +76,15 @@ def download_files_from_sftp(sftp, file_path_dict, local_path):
     try:
         folder_path = file_path_dict["folder_path"]
 
-        print('file_path_dict: ', file_path_dict["folder_path"])
+        print("file_path_dict: ", file_path_dict["folder_path"])
 
         del file_path_dict["folder_path"]
 
-        print('file_path_dict: ', file_path_dict)
-        print('file_path_dict.items(): ', file_path_dict.items())
+        print("file_path_dict: ", file_path_dict)
+        print("file_path_dict.items(): ", file_path_dict.items())
 
         for file, file_path in file_path_dict.items():
-            print('file: ', file, ' file_path: ', file_path)
+            print("file: ", file, " file_path: ", file_path)
             remote_file_path = file_path
             local_file_path = local_path + file
             sftp.get(remote_file_path, local_file_path)
