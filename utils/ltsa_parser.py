@@ -165,10 +165,10 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
         # Creating an index of valid PIDs
         valid_pid_df_index = valid_pid_df.set_index(["pid"]).index
 
-        # 2_parcel.csv
+        # 20240417-Parcel.csv
         parcel_df = (
             pd.read_csv(
-                input_directory + "2_parcel.csv",
+                input_directory + "20240417-Parcel.csv",
                 usecols=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"],
                 dtype={"PRMNNT_PRCL_ID": str, "PRCL_STTS_CD": str},
             )
@@ -178,7 +178,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
             .dropna(subset=["PRMNNT_PRCL_ID", "PRCL_STTS_CD"])
         )
 
-        print("Read file: 2_parcel.csv")
+        print("Read file: 20240417-Parcel.csv")
 
         parcel_df = parcel_df.rename(
             columns={"PRMNNT_PRCL_ID": "pid", "PRCL_STTS_CD": "parcel_status"}
@@ -191,15 +191,15 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
         # Updating parcel_df to only include rows with PIDs included in valid_pid_df
         parcel_df = parcel_df[parcel_df_index.isin(valid_pid_df_index)]
 
-        print(f"Filtered data from 2_parcel.csv")
+        print(f"Filtered data from 20240417-Parcel.csv")
 
         parcel_df.to_csv(output_directory + "parcel_raw.csv", index=False)
         print(f"Wrote raw LTSA data to file: {output_directory+'parcel_raw.csv'}")
 
-        # 3_titleparcel.csv
+        # 20240417-TitleParcel.csv
         title_parcel_df = (
             pd.read_csv(
-                input_directory + "3_titleparcel.csv",
+                input_directory + "20240417-TitleParcel.csv",
                 usecols=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"],
                 dtype={
                     "TITLE_NMBR": str,
@@ -212,7 +212,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "PRMNNT_PRCL_ID"])
         )
-        print("Read file: 3_titleparcel.csv")
+        print("Read file: 20240417-TitleParcel.csv")
 
         title_parcel_df = title_parcel_df.rename(
             columns={
@@ -234,15 +234,15 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
             title_parcel_df_index.isin(valid_pid_df_index)
         ]
 
-        print(f"Filtered data from 3_titleparcel.csv")
+        print(f"Filtered data from 20240417-TitleParcel.csv")
 
         title_parcel_df.to_csv(output_directory + "titleparcel_raw.csv", index=False)
         print(f"Wrote raw LTSA data to file: {output_directory+'titleparcel_raw.csv'}")
 
-        #  1_title.csv
+        #  20240417-Title.csv
         title_df = (
             pd.read_csv(
-                input_directory + " 1_title.csv",
+                input_directory + " 20240417-Title.csv",
                 usecols=[
                     "TITLE_NMBR",
                     "LTB_DISTRICT_CD",
@@ -263,7 +263,7 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD", "TTL_STTS_CD"])
         )
-        print("Read file:  1_title.csv")
+        print("Read file:  20240417-Title.csv")
 
         title_df.rename(
             columns={
@@ -294,15 +294,15 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
         # Updating title_df to only include rows with valid title numbers and valid land title districts included in title_parcel_df
         title_df = title_df[title_df_index.isin(title_parcel_df_without_pid_index)]
 
-        print(f"Filtered data from  1_title.csv")
+        print(f"Filtered data from  20240417-Title.csv")
 
         title_df.to_csv(output_directory + "title_raw.csv", index=False)
         print(f"Wrote raw ltsa data to file: {output_directory+'title_raw.csv'}")
 
-        # 4_titleowner.csv
+        # 20240417-TitleOwner.csv
         title_owner_df = (
             pd.read_csv(
-                input_directory + "4_titleowner.csv",
+                input_directory + "20240417-TitleOwner.csv",
                 usecols=[
                     "TITLE_NMBR",
                     "LTB_DISTRICT_CD",
@@ -341,9 +341,9 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD"])
         )
-        print("Read file: 4_titleowner.csv")
+        print("Read file: 20240417-TitleOwner.csv")
 
-        print(f"Filtered data from 4_titleowner.csv")
+        print(f"Filtered data from 20240417-TitleOwner.csv")
 
         title_owner_df = title_owner_df.rename(
             columns={
