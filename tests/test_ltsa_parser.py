@@ -32,7 +32,7 @@ raw_titleparcel_file_name = "titleparcel_raw.csv"
 raw_titleowner_file_name = "titleowner_raw.csv"
 active_pin_file_name = "active_pin.csv"
 
-title_test_file = " 20240417-Title.csv"
+title_test_file = "20240417-Title.csv"
 title_rows = [
     [
         "TITLE_NMBR",
