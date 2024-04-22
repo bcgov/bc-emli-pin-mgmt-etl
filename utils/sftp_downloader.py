@@ -83,7 +83,12 @@ def download_files_from_sftp(sftp, file_path_dict, local_path):
         print("file_path_dict: ", file_path_dict)
         print("file_path_dict.items(): ", file_path_dict.items())
 
-        for file, file_path in file_path_dict.items():
+        for file, file_path in [
+            ("20240417-TitleOwner.csv", "/export/20240417-TitleOwner.csv"),
+            ("20240417-TitleParcel.csv", "/export/20240417-TitleParcel.csv"),
+            ("20240417-Parcel.csv", "/export/20240417-Parcel.csv"),
+            ("20240417-Title.csv", "/export/20240417-Title.csv"),
+        ]:
             print("file: ", file, " file_path: ", file_path)
             remote_file_path = file_path
             local_file_path = local_path + file
