@@ -1,5 +1,5 @@
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import requests
 import time
 from datetime import datetime
@@ -62,6 +62,9 @@ def expire_pins(expired_titles_df, engine, expire_api_url, vhers_api_key):
     Returns:
     - None
     """
+    print(
+        f"Calling expire_pins"
+    )
     try:
         expired_title_list = list(expired_titles_df["title_number"])
 
@@ -71,28 +74,51 @@ def expire_pins(expired_titles_df, engine, expire_api_url, vhers_api_key):
                 str(expired_title_list).replace("[", "(").replace("]", ")")
             )
             # Find live_pin_id for each cancelled title
-            query = f"SELECT live_pin_id, title_number FROM active_pin WHERE title_number IN {title_number_string}"
+            query = f"SELECT live_pin_id, title_number FROM active_pin WHERE title_number IN {title_number_string} AND title_status = 'C'"
             expired_rows_df = pd.read_sql(query, engine)
 
-            # Call expire pin api for each title in expired_titles.csv
+            ## Call expire pin api for each title in expired_titles.csv
+            # for live_pin_id in expired_rows_df["live_pin_id"]:
+            #     try:
+            #         live_pin_id = str(live_pin_id)
+            #         data = {
+            #             "livePinId": live_pin_id,
+            #             "expirationReason": "CO",
+            #         }
+            #         url = expire_api_url
+            #         headers = {"x-api-key": vhers_api_key}
+
+            #         response = requests.post(url=url, json=data, headers=headers)
+            #         response.raise_for_status()
+
+            #     except requests.exceptions.HTTPError as e:
+            #         print(f"An error occurred calling Expire PIN API: {str(e)}")
+            #         raise e
+
+            # Delete cancelled titles directly instead of calling expired_titles.csv
             for live_pin_id in expired_rows_df["live_pin_id"]:
                 try:
-                    live_pin_id = str(live_pin_id)
-                    data = {
-                        "livePinId": live_pin_id,
-                        "expirationReason": "CO",
-                    }
-                    url = expire_api_url
-                    headers = {"x-api-key": vhers_api_key}
 
-                    response = requests.post(url=url, json=data, headers=headers)
-                    response.raise_for_status()
+                    # Create a SQL DELETE statement to delete cancelled titles from active_pin
+                    delete_sql = f"DELETE FROM active_pin WHERE live_pin_id = '{live_pin_id}' RETURNING live_pin_id"
 
-                except requests.exceptions.HTTPError as e:
-                    # console.log()
-                    print(f"An error occurred calling Expire PIN API: {str(e)}")
+                    # Create a SQL SELECT statement to sort pin_audit_log by most recent entry
+                    select_sql = f"SELECT * FROM pin_audit_log WHERE live_pin_id = '{live_pin_id}' ORDER BY log_created_at DESC"
+
+                    # Execute the SQL statements with parameter binding
+                    with engine.begin() as conn:
+                        result_1 = conn.execute(text(delete_sql)).fetchone()
+                        if (result_1):
+                            result_2 = conn.execute(text(select_sql)).fetchone()
+                            
+                            if (result_2):
+                                # Create a SQL UPDATE statement to update most recent log for live_pin_id
+                                update_sql = f"UPDATE pin_audit_log SET expiration_reason = 'CO', altered_by_username = 'dataimportjob' WHERE live_pin_id = '{live_pin_id}' AND log_created_at = '{result_2[17]}'"
+                                conn.execute(text(update_sql))
+
+                except Exception as e:
                     raise e
-
+                
             total_pins_expired = len(expired_rows_df["live_pin_id"])
 
             print(
