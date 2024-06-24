@@ -62,9 +62,6 @@ def expire_pins(expired_titles_df, engine, expire_api_url, vhers_api_key):
     Returns:
     - None
     """
-    print(
-        f"Calling expire_pins"
-    )
     try:
         expired_title_list = list(expired_titles_df["title_number"])
 
@@ -98,7 +95,6 @@ def expire_pins(expired_titles_df, engine, expire_api_url, vhers_api_key):
             # Delete cancelled titles directly instead of calling expired_titles.csv
             for live_pin_id in expired_rows_df["live_pin_id"]:
                 try:
-
                     # Create a SQL DELETE statement to delete cancelled titles from active_pin
                     delete_sql = f"DELETE FROM active_pin WHERE live_pin_id = '{live_pin_id}' RETURNING live_pin_id"
 
@@ -108,17 +104,17 @@ def expire_pins(expired_titles_df, engine, expire_api_url, vhers_api_key):
                     # Execute the SQL statements with parameter binding
                     with engine.begin() as conn:
                         result_1 = conn.execute(text(delete_sql)).fetchone()
-                        if (result_1):
+                        if result_1:
                             result_2 = conn.execute(text(select_sql)).fetchone()
-                            
-                            if (result_2):
+
+                            if result_2:
                                 # Create a SQL UPDATE statement to update most recent log for live_pin_id
                                 update_sql = f"UPDATE pin_audit_log SET expiration_reason = 'CO', altered_by_username = 'dataimportjob' WHERE live_pin_id = '{live_pin_id}' AND log_created_at = '{result_2[17]}'"
                                 conn.execute(text(update_sql))
 
                 except Exception as e:
                     raise e
-                
+
             total_pins_expired = len(expired_rows_df["live_pin_id"])
 
             print(
