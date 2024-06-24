@@ -337,10 +337,12 @@ def parse_ltsa_files(input_directory, output_directory, data_rules_url, engine):
                 },
             )
             .applymap(lambda x: x.strip() if isinstance(x, str) else x)
+            .applymap(lambda x: x.replace("'", "`") if isinstance(x, str) else x)
             .replace("", None)
             .replace(np.nan, None)
             .dropna(subset=["TITLE_NMBR", "LTB_DISTRICT_CD"])
         )
+
         print("Read file: 4_titleowner.csv")
 
         print(f"Filtered data from 4_titleowner.csv")
