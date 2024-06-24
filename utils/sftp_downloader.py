@@ -49,18 +49,12 @@ def get_files_to_download_from_sftp(sftp, remote_path):
 
         if latestfolder is not None:
             innerLatestFolder = latestfolder.replace("_Weekly", "")
-            files_to_download = sftp.listdir(
-                f"{remote_path}{latestfolder}/{innerLatestFolder}/"
-            )
+            files_to_download = sftp.listdir(f"{remote_path}{latestfolder}/")
 
             for file in files_to_download:
-                file_path_dict[file] = (
-                    f"{remote_path}{latestfolder}/{innerLatestFolder}/{file}"
-                )
+                file_path_dict[file] = f"{remote_path}{latestfolder}/{file}"
 
-            file_path_dict["folder_path"] = (
-                f"{remote_path}{latestfolder}/{innerLatestFolder}/"
-            )
+            file_path_dict["folder_path"] = f"{remote_path}{latestfolder}/"
 
         else:
             print("No new files uploaded...")
@@ -81,9 +75,21 @@ def download_files_from_sftp(sftp, file_path_dict, local_path):
     """
     try:
         folder_path = file_path_dict["folder_path"]
+
+        print("file_path_dict: ", file_path_dict["folder_path"])
+
         del file_path_dict["folder_path"]
 
-        for file, file_path in file_path_dict.items():
+        print("file_path_dict: ", file_path_dict)
+        print("file_path_dict.items(): ", file_path_dict.items())
+
+        for file, file_path in [
+            ("20240417-TitleOwner.csv", "/export/20240417-TitleOwner.csv"),
+            ("20240417-TitleParcel.csv", "/export/20240417-TitleParcel.csv"),
+            ("20240417-Parcel.csv", "/export/20240417-Parcel.csv"),
+            ("20240417-Title.csv", "/export/20240417-Title.csv"),
+        ]:
+            print("file: ", file, " file_path: ", file_path)
             remote_file_path = file_path
             local_file_path = local_path + file
             sftp.get(remote_file_path, local_file_path)
@@ -115,6 +121,8 @@ def run(host, port, username, password, remote_path, local_path):
         sftp_conn = set_sftp_conn(host, port, username, password)
 
         file_path_dict = get_files_to_download_from_sftp(sftp_conn, remote_path)
+
+        print(file_path_dict)
 
         # Download the files
         folder_path = download_files_from_sftp(sftp_conn, file_path_dict, local_path)
