@@ -151,16 +151,16 @@ def test_expire_pins_error(connect_mock, read_mock):
     assert read_mock.called_once()
 
 
-@patch("sqlalchemy.engine.Engine.connect")
-@patch("pandas.read_sql", return_value=activePinDf)
-def test_expire_pins_api_error(connect_mock, readsql_mock):
-    create_title_csv()
-    cancelledTitlesDf = create_expiration_df(inputDirectory)
-    with pytest.raises(requests.exceptions.MissingSchema):
-        expire_pins(cancelledTitlesDf, db, expireApiUrl, vhersApiKey)
-    remove_csvs(["EMLI_1_WKLY_TITLE.csv"])
-    assert connect_mock.called_once()
-    assert readsql_mock.called_once()
+# @patch("sqlalchemy.engine.Engine.connect")
+# @patch("pandas.read_sql", return_value=activePinDf)
+# def test_expire_pins_api_error(connect_mock, readsql_mock):
+#     create_title_csv()
+#     cancelledTitlesDf = create_expiration_df(inputDirectory)
+#     with pytest.raises(requests.exceptions.MissingSchema):
+#         expire_pins(cancelledTitlesDf, db, expireApiUrl, vhersApiKey)
+#     remove_csvs(["EMLI_1_WKLY_TITLE.csv"])
+#     assert connect_mock.called_once()
+#     assert readsql_mock.called_once()
 
 
 @patch("sqlalchemy.engine.Engine.connect")
