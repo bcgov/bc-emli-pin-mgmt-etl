@@ -169,8 +169,13 @@ def run(
         for file_name in file_list:
             file_path = os.path.join(input_directory, file_name)
             # Adjust for different file formats (e.g., pd.read_csv for CSV files)
-            if file_name == 'active_pin.csv':
-                df = pd.read_csv(file_path, encoding="unicode_escape", low_memory=False , converters={'pids': str})
+            if file_name == "active_pin.csv":
+                df = pd.read_csv(
+                    file_path,
+                    encoding="unicode_escape",
+                    low_memory=False,
+                    converters={"pids": str},
+                )
             else:
                 df = pd.read_csv(file_path, encoding="unicode_escape", low_memory=False)
 
