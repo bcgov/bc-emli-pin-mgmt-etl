@@ -37,7 +37,7 @@
         "to_column": "incorporation_number",
         "datatype": "int"
       },
-      "remove_characters": [".", ",", "-", "/", "#", "'"]
+      "remove_characters": [".", ",", "-", "/", "#", "'", "%"]
     },
     "incorporation_number": {
       "remove_characters": [",", "BC", "'"]
