@@ -40,14 +40,14 @@ def insert_postgres_table_if_rows_not_exist(
         )
 
         # Create a SQL INSERT statement with ON CONFLICT DO NOTHING clause
-        insert_sql = f"INSERT INTO {table_name} ({column_names}) VALUES {
-            data_to_insert} ON CONFLICT ({', '.join(unique_key_columns)}) DO NOTHING;"
+        insert_sql = f"INSERT INTO {table_name} ({column_names}) VALUES {data_to_insert} ON CONFLICT ({', '.join(unique_key_columns)}) DO NOTHING;"
 
         # Execute the SQL statement with parameter binding
         with engine.begin() as conn:
             conn.execute(text(insert_sql))
 
     except Exception as e:
+        print(e)
         raise e
 
 
@@ -156,8 +156,7 @@ def run(
     """
     try:
         # Create a connection to the PostgreSQL database
-        conn_str = f"postgresql://{user}:{
-            password}@{host}:{port}/{database_name}"
+        conn_str = f"postgresql://{user}:{password}@{host}:{port}/{database_name}"
         engine = create_engine(conn_str)
 
         # List all files in the input directory
@@ -219,13 +218,11 @@ def run(
         print("Table-wise Statistics:")
         for stat in table_statistics:
             print(
-                f"Table: {stat['Table Name']}, Rows Inserted: {
-                    stat['Rows Inserted']}, Elapsed Time: {stat['Elapsed Time (s)']:.2f} seconds"
+                f"Table: {stat['Table Name']}, Rows Inserted: {stat['Rows Inserted']}, Elapsed Time: {stat['Elapsed Time (s)']:.2f} seconds"
             )
 
         print(
-            f"All files processed. Total rows inserted: {
-                total_rows_inserted}, Total Time elapsed: {end_time - start_time:.2f} seconds"
+            f"All files processed. Total rows inserted: {total_rows_inserted}, Total Time elapsed: {end_time - start_time:.2f} seconds"
         )
 
     except Exception as e:
