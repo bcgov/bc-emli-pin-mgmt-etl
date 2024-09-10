@@ -106,7 +106,7 @@ def write_dataframe_to_postgres(
 
         # Split the dataframe into batches
         batches = [
-            dataframe[i: i + batch_size] for i in range(0, len(dataframe), batch_size)
+            dataframe[i : i + batch_size] for i in range(0, len(dataframe), batch_size)
         ]
 
         # Define the columns that make up the unique key --all columns
@@ -181,8 +181,7 @@ def run(
                     converters={"pids": str},
                 )
             else:
-                df = pd.read_csv(
-                    file_path, encoding="unicode_escape", low_memory=False)
+                df = pd.read_csv(file_path, encoding="unicode_escape", low_memory=False)
             # Use file name without extension as table name
             table_name = os.path.splitext(file_name)[0]
             tables_with_etl_log_foreign_key = [
@@ -212,8 +211,7 @@ def run(
 
         end_time = time.time()  # Stop measuring time
 
-        total_rows_inserted = sum(stat["Rows Inserted"]
-                                  for stat in table_statistics)
+        total_rows_inserted = sum(stat["Rows Inserted"] for stat in table_statistics)
 
         print("Table-wise Statistics:")
         for stat in table_statistics:
