@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import text, create_engine, func, select
 import time
-import psycopg2, os
+import psycopg2
+import os
 
 
 def insert_postgres_table_if_rows_not_exist(
@@ -35,6 +36,7 @@ def insert_postgres_table_if_rows_not_exist(
             .replace("'')", "')")
             .replace("', \"", "', '")
             .replace("\", '", "', '")
+            .replace(":", "\\:")
         )
 
         # Create a SQL INSERT statement with ON CONFLICT DO NOTHING clause
@@ -45,6 +47,7 @@ def insert_postgres_table_if_rows_not_exist(
             conn.execute(text(insert_sql))
 
     except Exception as e:
+        print(e)
         raise e
 
 
@@ -91,7 +94,8 @@ def write_dataframe_to_postgres(
     """
     total_rows_inserted = 0  # Initialize the total count of rows inserted
     try:
-        print(f"Updating table '{table_name}'...")  # Print the table being updated
+        # Print the table being updated
+        print(f"Updating table '{table_name}'...")
 
         rows_before_insert = get_row_count(table_name, engine)
         dataframe = dataframe.replace(np.nan, "")
@@ -169,7 +173,15 @@ def run(
         for file_name in file_list:
             file_path = os.path.join(input_directory, file_name)
             # Adjust for different file formats (e.g., pd.read_csv for CSV files)
-            df = pd.read_csv(file_path, encoding="unicode_escape", low_memory=False)
+            if file_name == "active_pin.csv":
+                df = pd.read_csv(
+                    file_path,
+                    encoding="unicode_escape",
+                    low_memory=False,
+                    converters={"pids": str},
+                )
+            else:
+                df = pd.read_csv(file_path, encoding="unicode_escape", low_memory=False)
             # Use file name without extension as table name
             table_name = os.path.splitext(file_name)[0]
             tables_with_etl_log_foreign_key = [
@@ -219,7 +231,8 @@ def run(
 # Entry point of the script
 if __name__ == "__main__":  # pragma: no cover
     # Replace these placeholders with your actual values
-    input_directory = "your_input_directory"  # Replace with your input directory path
+    # Replace with your input directory path
+    input_directory = "your_input_directory"
     database_name = "your_database_name"  # Replace with your database name
     batch_size = 1000  # Set your desired batch size
     host = "localhost"  # Replace with your host

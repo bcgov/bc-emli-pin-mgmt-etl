@@ -37,18 +37,18 @@
         "to_column": "incorporation_number",
         "datatype": "int"
       },
-      "remove_characters": [".", ",", "-", "/", "#", "'"]
+      "remove_characters": [".", ",", "-", "/", "#", "'", "%"]
     },
     "incorporation_number": {
       "remove_characters": [",", "BC", "'"]
     },
     "address_line_1": {
       "to_uppercase": "to_uppercase",
-      "remove_characters": [".", ",", "-", "/", "#", "'"]
+      "remove_characters": [".", ",", "-", "/", "#", "'", "(", ")"]
     },
     "address_line_2": {
       "to_uppercase": "to_uppercase",
-      "remove_characters": [".", ",", "-", "/", "#", "'"]
+      "remove_characters": [".", ",", "-", "/", "#", "'", "(", ")"]
     },
     "city": {
       "to_uppercase": "to_uppercase",
